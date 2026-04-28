@@ -1,0 +1,73 @@
+[project]
+name = "dungeon-crawler"
+version = "0.1.0"
+description = "DS&A 기말 프로젝트 — Python Dungeon Crawler RPG (BSP·Deque·Heap·Hash·A*·AVL)"
+requires-python = ">=3.10"
+authors = [
+    { name = "DSA Team" },
+]
+readme = "README.md"
+dependencies = [
+    "rich>=13.0",
+    "readchar>=4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+dungeon-crawler = "main:main"
+
+# ==============================================================
+# Ruff (포맷 + 린트 올인원)
+# ==============================================================
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = [".venv", "build", "dist"]
+
+[tool.ruff.lint]
+# 선택한 룰셋:
+#   E, W   — pycodestyle (PEP 8)
+#   F      — pyflakes (논리적 오류)
+#   I      — isort (import 정리)
+#   B      — flake8-bugbear (흔한 버그 패턴)
+#   UP     — pyupgrade (구식 문법 → 최신)
+#   N      — pep8-naming (네이밍 규칙)
+#   SIM    — flake8-simplify
+#   RUF    — Ruff 자체 룰
+select = ["E", "W", "F", "I", "B", "UP", "N", "SIM", "RUF"]
+ignore = [
+    "E501",  # line-too-long (formatter가 처리)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "B011",  # assert False 허용
+    "N802",  # 테스트 함수명 자유
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+# ==============================================================
+# pytest
+# ==============================================================
+[tool.pytest.ini_options]
+minversion = "7.4"
+testpaths = ["tests"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+]
