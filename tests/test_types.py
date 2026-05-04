@@ -72,8 +72,13 @@ class TestTile:
 class TestEntity:
     def _player(self, **overrides):
         defaults = dict(
-            id=1, pos=Coord(0, 0), hp=50, max_hp=50,
-            atk=10, defense=5, speed=100,
+            id=1,
+            pos=Coord(0, 0),
+            hp=50,
+            max_hp=50,
+            atk=10,
+            defense=5,
+            speed=100,
         )
         defaults.update(overrides)
         return Player(**defaults)
@@ -110,8 +115,13 @@ class TestEntity:
 
     def test_enemy_has_kind_and_path_cache(self):
         e = Enemy(
-            id=2, pos=Coord(5, 5), hp=20, max_hp=20,
-            atk=8, defense=2, speed=80,
+            id=2,
+            pos=Coord(5, 5),
+            hp=20,
+            max_hp=20,
+            atk=8,
+            defense=2,
+            speed=80,
         )
         assert e.kind == "goblin"
         assert e.path_cache == []  # default_factory 가 정상 동작 (공유 X)
@@ -136,8 +146,10 @@ class TestItem:
 
     def test_item_with_effect(self):
         sword = Item(
-            id="iron_sword", name="철검",
-            category=ItemCategory.WEAPON, effect={"atk": 5},
+            id="iron_sword",
+            name="철검",
+            category=ItemCategory.WEAPON,
+            effect={"atk": 5},
         )
         assert sword.effect == {"atk": 5}
 
@@ -157,8 +169,13 @@ class TestAction:
 
     def test_move_action_constructs(self):
         actor = Player(
-            id=1, pos=Coord(0, 0), hp=50, max_hp=50,
-            atk=10, defense=5, speed=100,
+            id=1,
+            pos=Coord(0, 0),
+            hp=50,
+            max_hp=50,
+            atk=10,
+            defense=5,
+            speed=100,
         )
         m = MoveAction(actor=actor, dx=1, dy=0)
         assert m.actor is actor
@@ -186,13 +203,19 @@ class TestAction:
 class TestRecord:
     def test_record_is_frozen_and_hashable(self):
         r = Record(
-            name="alice", score=1000, play_time_sec=120,
-            undo_used=3, timestamp="2026-04-28T19:00:00Z",
+            name="alice",
+            score=1000,
+            play_time_sec=120,
+            undo_used=3,
+            timestamp="2026-04-28T19:00:00Z",
         )
         # 동일 데이터의 두 Record 는 동등
         same = Record(
-            name="alice", score=1000, play_time_sec=120,
-            undo_used=3, timestamp="2026-04-28T19:00:00Z",
+            name="alice",
+            score=1000,
+            play_time_sec=120,
+            undo_used=3,
+            timestamp="2026-04-28T19:00:00Z",
         )
         assert r == same
         # set 에 들어갈 수 있어야 함 (frozen=True)
@@ -200,8 +223,11 @@ class TestRecord:
 
     def test_record_immutable(self):
         r = Record(
-            name="alice", score=1000, play_time_sec=120,
-            undo_used=0, timestamp="2026-04-28T19:00:00Z",
+            name="alice",
+            score=1000,
+            play_time_sec=120,
+            undo_used=0,
+            timestamp="2026-04-28T19:00:00Z",
         )
         with pytest.raises(Exception):
             r.score = 9999  # type: ignore[misc]

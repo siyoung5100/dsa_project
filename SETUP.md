@@ -87,14 +87,37 @@ git switch -c feat/<본인-담당-모듈>
 
 ---
 
-## 다음 단계
+## 다음 단계 — 2인 팀, 학습 목적
 
-1. **모듈 분담을 정한다** — 명세서 §4의 6개 모듈을 4명에게 나누어 할당.
-2. **첫 모듈은 `core/types.py`** — 모든 모듈의 의존성 루트이므로 한 명이 먼저 끝내고 main에 머지.
-3. 그 후 4명이 동시에 분담 모듈을 작업.
+본 프로젝트의 Git 사용 목적은 협업 효율보다는 **Git/PR 워크플로 학습**에 있다. 2인이라는 작은 규모이므로 일부 작업은 페어 프로그래밍이 더 자연스럽지만, 학습 가치를 살리려면 **다음 규칙을 의도적으로 따른다.**
 
-권장 분담 (조합 예시):
-- A: `map/`(BSP, dungeon, fov)
-- B: `systems/`(turn_manager, undo, inventory)
-- C: `persistence/`(avl_tree, leaderboard) — AVL이 까다로우니 일찍 시작
-- D: `systems/ai.py`(A*) + `ui/terminal.py` + `main.py` 통합
+1. 모든 변경은 feature 브랜치 + PR을 거친다. main 직접 push 금지. PR 본문에 어떤 자료구조/알고리즘을 어떻게 만들었는지 한 단락 적는다 → 발표 Q&A 자료가 자동으로 누적된다.
+2. 페어 프로그래밍 시에는 commit 마지막에 `Co-authored-by: 이름 <이메일>` trailer를 넣는다 (CONTRIBUTING.md 참고).
+3. 가급적 작은 PR을 자주 — rebase·squash·conflict 해결을 직접 겪어볼 기회.
+
+### 모듈 분담 (제안)
+
+`core/types.py`(완료)에 이어 6개 모듈을 다음과 같이 묶는다.
+
+**1단계 — 어려운 모듈은 페어로**
+- `persistence/avl_tree.py` (AVL Tree) — 회전·균형 로직이 까다로워 함께 짜는 게 안전. **PR 1: 페어 작성**.
+
+**2단계 — 둘이 동시에**
+- 사람 A: `map/`(`bsp.py`, `dungeon.py`, `fov.py`) + `systems/ai.py`(A*) → "월드와 길찾기" 묶음.
+- 사람 B: `systems/`(`turn_manager.py`, `undo.py`, `inventory.py`) + `persistence/leaderboard.py` → "게임 시스템과 영속화" 묶음.
+- 모듈마다 별도 PR. 서로 리뷰어로 지정.
+
+**3단계 — 통합은 페어로**
+- `ui/terminal.py` + `main.py` — 게임 루프, 키 입력, 화면 갱신. 여러 모듈을 묶는 단계라 함께 작업.
+
+이렇게 가면 PR 약 10개 정도가 main 히스토리에 남고, 각자 4~5개씩 PR을 만들고 리뷰하는 경험을 쌓는다.
+
+### 추가로 시도해볼 만한 Git 학습 주제
+
+여유가 있을 때 의도적으로 한 번씩 해보면 좋다.
+
+- `git rebase -i`로 커밋 정리 (squash, reword)
+- conflict가 나는 PR을 일부러 만들어서 해결 연습
+- `git stash` / `git cherry-pick`
+- `git reset --soft` / `git revert`의 차이 체감
+- GitHub의 PR 리뷰 (Request changes / Approve / Suggestions) 모두 사용해보기

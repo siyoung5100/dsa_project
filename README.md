@@ -15,7 +15,9 @@
 | 적 AI | A\* (Manhattan) | O(E log V) | 그리드 최단경로 표준, heap 자료구조 재사용 |
 | 리더보드 | AVL Tree (자체 구현) | O(log N) | insert/rank/kth 모두 균형 보장 |
 
-자세한 설계 근거는 `../DSA_구현_명세서.docx` 참고.
+자세한 설계 근거는 [docs/spec.md](docs/spec.md) (또는 부모 폴더의 `DSA_구현_명세서.docx` 원본) 참고.
+
+> 🤖 **AI 코딩 에이전트 사용자라면 [AGENTS.md](AGENTS.md)부터 읽으세요.** Claude Code, Gemini CLI, Cursor 등이 진입 시 가장 먼저 봐야 할 파일입니다. (Claude Code는 [CLAUDE.md](CLAUDE.md)도 자동으로 인식하며, AGENTS.md를 import하도록 설정되어 있습니다.)
 
 ## 사용한 외부 라이브러리
 
