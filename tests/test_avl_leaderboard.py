@@ -112,3 +112,45 @@ def test_avl_random_stress():
     remaining_keys = sorted(keys[50:])
     tree_keys = [node.key for node in tree.in_order()]
     assert tree_keys == remaining_keys
+
+def test_leaderboard_sorting_and_rank():
+    from persistence.leaderboard import Leaderboard
+    from core.types import Record
+    import pathlib
+    
+    # 임시 파일 경로 (실제 파일은 쓰지 않도록 처리하거나 tmp_path 활용)
+    lb = Leaderboard(pathlib.Path("dummy.json"))
+    lb.tree = AVLTree() # 초기화 (load 방지)
+
+    r1 = Record("Alice", 1000, 120, 5, "2026-05-01T10:00:00")
+    r2 = Record("Bob", 1000, 100, 2, "2026-05-01T10:00:00") # 같은 점수, 더 좋은 기록
+    r3 = Record("Charlie", 500, 200, 10, "2026-05-01T10:00:00") # 낮은 점수
+    
+    # 랭킹 확인 (1-indexed)
+    assert lb.add(r1) == 1
+    assert lb.add(r2) == 1 # Bob이 Alice를 밀어냄
+    assert lb.add(r3) == 3
+    
+    # 전체 순서 확인
+    top = lb.top(3)
+    assert top[0].name == "Bob"
+    assert top[1].name == "Alice"
+    assert top[2].name == "Charlie"
+
+def test_leaderboard_persistence(tmp_path):
+    from persistence.leaderboard import Leaderboard
+    from core.types import Record
+    
+    db_file = tmp_path / "leaderboard.json"
+    lb = Leaderboard(db_file)
+    
+    r1 = Record("Alice", 1000, 120, 5, "2026-05-01T10:00:00")
+    lb.add(r1)
+    
+    # 파일에 저장되었는지 확인 (add 내부에서 save 호출 기대)
+    assert db_file.exists()
+    
+    # 새 인스턴스에서 불러오기
+    lb2 = Leaderboard(db_file)
+    assert len(lb2.tree) == 1
+    assert lb2.top(1)[0].name == "Alice"
