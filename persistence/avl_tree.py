@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
@@ -22,6 +23,47 @@ class AVLTree:
         """키 기반 값 검색. O(log N)"""
         node = self._search(self.root, key)
         return node.value if node else None
+
+    def kth(self, k: int) -> AVLNode | None:
+        """k번째 순위의 노드 반환 (0-indexed). O(log N)"""
+        return self._kth(self.root, k)
+
+    def _kth(self, node: AVLNode | None, k: int) -> AVLNode | None:
+        if node is None:
+            return None
+
+        left_size = self._get_size(node.left)
+        if k < left_size:
+            return self._kth(node.left, k)
+        elif k > left_size:
+            return self._kth(node.right, k - left_size - 1)
+        else:
+            return node
+
+    def rank(self, key: Any) -> int:
+        """특정 키보다 작은 노드의 개수 반환. O(log N)"""
+        return self._rank(self.root, key)
+
+    def _rank(self, node: AVLNode | None, key: Any) -> int:
+        if node is None:
+            return 0
+
+        if key < node.key:
+            return self._rank(node.left, key)
+        elif key > node.key:
+            return 1 + self._get_size(node.left) + self._rank(node.right, key)
+        else:
+            return self._get_size(node.left)
+
+    def in_order(self) -> Iterator[AVLNode]:
+        """정렬된 순서로 노드를 순회하는 Generator. O(N)"""
+        yield from self._in_order(self.root)
+
+    def _in_order(self, node: AVLNode | None) -> Iterator[AVLNode]:
+        if node:
+            yield from self._in_order(node.left)
+            yield node
+            yield from self._in_order(node.right)
 
     def _search(self, node: AVLNode | None, key: Any) -> AVLNode | None:
         if node is None or node.key == key:

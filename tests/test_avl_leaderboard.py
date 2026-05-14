@@ -37,3 +37,22 @@ def test_avl_balance_factor():
     # 균형이 잡혔다면 높이는 log2(7) 근처인 3이어야 함 (루트 기준)
     # 미구현 시에는 7이 됨
     assert tree.root.height <= 3
+
+def test_avl_kth_rank():
+    tree = AVLTree()
+    # 10, 20, 30, 40, 50 삽입
+    for i in range(1, 6):
+        tree.insert(i * 10, f"v{i*10}")
+    
+    # kth (0-indexed)
+    # 0: 10, 1: 20, 2: 30, 3: 40, 4: 50
+    assert tree.kth(0).key == 10
+    assert tree.kth(2).key == 30
+    assert tree.kth(4).key == 50
+    assert tree.kth(5) is None
+    
+    # rank (key 미만 노드 수)
+    assert tree.rank(10) == 0
+    assert tree.rank(30) == 2
+    assert tree.rank(50) == 4
+    assert tree.rank(100) == 5
