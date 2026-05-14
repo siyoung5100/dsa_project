@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from core.rng import RNG
 from core.types import Coord, Tile, TileType
@@ -44,9 +43,9 @@ class BSPNode:
     """BSP 트리의 노드."""
 
     rect: Rect
-    left: Optional[BSPNode] = None
-    right: Optional[BSPNode] = None
-    room: Optional[Rect] = None
+    left: BSPNode | None = None
+    right: BSPNode | None = None
+    room: Rect | None = None
 
 
 def generate_dungeon(
@@ -54,7 +53,7 @@ def generate_dungeon(
     height: int,
     min_leaf: int = 8,
     max_depth: int = 5,
-    seed: Optional[int] = None,
+    seed: int | None = None,
 ) -> Dungeon:
     """BSP로 던전을 생성해 Dungeon 객체를 반환."""
     rng = RNG(seed)
@@ -180,7 +179,7 @@ def _connect(node: BSPNode, dungeon: Dungeon, rng: RNG) -> None:
         _carve_corridor(dungeon, c1, c2, rng)
 
 
-def _get_random_room_center(node: BSPNode, rng: RNG) -> Optional[Coord]:
+def _get_random_room_center(node: BSPNode, rng: RNG) -> Coord | None:
     """해당 노드(및 자식)의 리프 방들 중 하나를 골라 중심 반환."""
     rooms = []
 

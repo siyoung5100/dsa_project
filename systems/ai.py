@@ -12,9 +12,10 @@ from __future__ import annotations
 
 import heapq
 import itertools
-from typing import Callable, Any
+from collections.abc import Callable
+from typing import Any
 
-from core.types import Coord, Action, MoveAction, Enemy
+from core.types import Action, Coord, Enemy, MoveAction
 
 
 def manhattan(a: Coord, b: Coord) -> int:
@@ -39,7 +40,7 @@ def a_star(
     # (f_score, counter, current_coord)
     counter = itertools.count()
     open_heap = [(h(start, goal), next(counter), start)]
-    
+
     came_from: dict[Coord, Coord | None] = {start: None}
     g_score: dict[Coord, int] = {start: 0}
 
@@ -57,7 +58,7 @@ def a_star(
         for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
             neighbor = curr + Coord(dx, dy)
 
-            # goal 인 경우 passable 체크를 우회하거나(적 위치 등), 
+            # goal 인 경우 passable 체크를 우회하거나(적 위치 등),
             # 호출자가 goal이 passable한지 확인했다고 가정한다.
             # 여기서는 goal이면 무조건 체크하거나 통과 가능해야 한다.
             if not passable(neighbor) and neighbor != goal:
@@ -84,29 +85,26 @@ class EnemyAI:
         3. 경로 캐시를 활용해 연산 절약
         """
         dist = manhattan(enemy.pos, player_pos)
-        
+
         # 공격 사거리 안 (상하좌우 인접)
         if dist == 1:
             # TODO: AttackAction 구현 후 교체. 현재는 WaitAction이나 Move(0,0) 개념
             from core.types import AttackAction
-            return AttackAction(enemy, world.player) # world.player 가 있다고 가정
+
+            return AttackAction(enemy, world.player)  # world.player 가 있다고 가정
 
         # 경로 재계산 필요 여부 확인
         # 캐시가 비었거나, 플레이어가 캐시의 목적지와 다르면 재계산
         if not enemy.path_cache or enemy.path_cache[-1] != player_pos:
-            enemy.path_cache = a_star(
-                enemy.pos, 
-                player_pos, 
-                passable=world.is_passable
-            )
+            enemy.path_cache = a_star(enemy.pos, player_pos, passable=world.is_passable)
 
         # 경로를 찾은 경우 이동
         if len(enemy.path_cache) > 1:
             next_step = enemy.path_cache[1]
             dx = next_step.x - enemy.pos.x
             dy = next_step.y - enemy.pos.y
-            
-            # 다음 칸에 다른 적이 있는지 등은 MoveAction.do() 에서 체크하거나 
+
+            # 다음 칸에 다른 적이 있는지 등은 MoveAction.do() 에서 체크하거나
             # 여기서 추가 체크 가능. 일단 MoveAction 반환.
             return MoveAction(enemy, dx, dy)
 

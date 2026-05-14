@@ -7,8 +7,7 @@
 - 방끼리 겹치지 않음
 """
 
-import pytest
-from core.types import Coord, TileType
+from core.types import Coord
 from map.bsp import generate_dungeon
 
 

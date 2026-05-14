@@ -7,6 +7,8 @@ is_passable(coord), in_bounds(coord), tile_at(coord) 같은 조회 API를
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any  # Rect 타입을 위해 Any 사용 (bsp와 순환 참조 방지용)
+
 from core.types import Coord, Tile, TileType
 
 
@@ -51,6 +53,3 @@ class Dungeon:
             if self.in_bounds(nxt):
                 neighbors.append(nxt)
         return neighbors
-
-
-from typing import Any  # Rect 타입을 위해 Any 사용 (bsp와 순환 참조 방지용)

@@ -7,6 +7,7 @@ Recursive Shadowcasting 알고리즘을 사용하여 효율적으로 가시성�
 from __future__ import annotations
 
 import math
+
 from core.types import Coord, TileType
 from map.dungeon import Dungeon
 
@@ -14,7 +15,7 @@ from map.dungeon import Dungeon
 def compute_fov(dungeon: Dungeon, center: Coord, radius: int) -> None:
     """Shadowcasting을 사용하여 플레이어 시야를 계산하고 dungeon.grid에 반영한다.
 
-    먼저 모든 타일의 visible을 False로 초기화하고, 
+    먼저 모든 타일의 visible을 False로 초기화하고,
     센터에서 보이는 타일들만 True로 설정한다.
     """
     # 1. 초기화: 모든 타일을 비가시 상태로 설정
@@ -34,13 +35,13 @@ def compute_fov(dungeon: Dungeon, center: Coord, radius: int) -> None:
 
 
 def _scan(
-    dungeon: Dungeon, 
-    center: Coord, 
-    radius: int, 
-    depth: int, 
-    start_slope: float, 
-    end_slope: float, 
-    octant: int
+    dungeon: Dungeon,
+    center: Coord,
+    radius: int,
+    depth: int,
+    start_slope: float,
+    end_slope: float,
+    octant: int,
 ) -> None:
     """특정 8분면을 재귀적으로 스캔."""
     if depth > radius:
@@ -48,13 +49,13 @@ def _scan(
 
     # 현재 깊이(depth)에서 x 범위를 결정 (슬로프에 따라)
     # shadowcasting에서 depth는 octant 좌표계의 'x' 역할을 함.
-    
+
     # 이전에 벽이었는지 추적 (새로운 가시 영역 시작 확인용)
     prev_tile_blocked = False
-    
+
     # depth 열의 각 행을 아래에서 위로(슬로프 기준) 스캔
     # 정수 좌표로 변환하기 위해 슬로프 활용
-    
+
     # 8분면 좌표 변환을 위한 테이블
     # (dx, dy) = (depth, row) 변환
     # octants:
@@ -70,7 +71,7 @@ def _scan(
         # 상대 좌표를 절대 좌표로 변환
         x, y = _transform_octant(depth, row, octant)
         abs_pos = Coord(center.x + x, center.y + y)
-        
+
         tile = dungeon.tile_at(abs_pos)
         if not tile:
             continue
@@ -81,7 +82,7 @@ def _scan(
             tile.explored = True
 
         blocked = tile.type == TileType.WALL
-        
+
         if prev_tile_blocked:
             if not blocked:
                 # 벽 뒤의 빈 공간 시작: 새로운 슬로프로 재귀 호출
@@ -105,12 +106,20 @@ def _scan(
 
 def _transform_octant(x: int, y: int, octant: int) -> tuple[int, int]:
     """octant 좌표계(x, y)를 상대 월드 좌표계(dx, dy)로 변환."""
-    if octant == 0: return (x, y)
-    if octant == 1: return (y, x)
-    if octant == 2: return (-y, x)
-    if octant == 3: return (-x, y)
-    if octant == 4: return (-x, -y)
-    if octant == 5: return (-y, -x)
-    if octant == 6: return (y, -x)
-    if octant == 7: return (x, -y)
+    if octant == 0:
+        return (x, y)
+    if octant == 1:
+        return (y, x)
+    if octant == 2:
+        return (-y, x)
+    if octant == 3:
+        return (-x, y)
+    if octant == 4:
+        return (-x, -y)
+    if octant == 5:
+        return (-y, -x)
+    if octant == 6:
+        return (y, -x)
+    if octant == 7:
+        return (x, -y)
     return (0, 0)
