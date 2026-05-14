@@ -39,18 +39,19 @@ dungeon_crawler/
 ├── README.md, CONTRIBUTING.md, SETUP.md
 ├── pyproject.toml, requirements*.txt, .gitignore, .gitattributes
 ├── core/             # 공통 데이터 타입 (의존 그래프 루트, 누구에게도 의존하지 않음)
-│   ├── types.py      # ✅ 구현 완료. Coord, Tile, Entity, Item, Action, Record
-│   ├── rng.py        # ⏳ 미구현. seed 고정 랜덤 래퍼
+│   ├── types.py      # ✅ 구현 완료. Coord, Tile, Entity, Player, Enemy, Item, Action, Record
+│   ├── rng.py        # ✅ 구현 완료. seed 고정 랜덤 래퍼
 │   └── events.py     # ⏳ 미구현. 이벤트 로그 큐
 ├── map/              # 던전 맵 / 시야
-│   ├── bsp.py        # ⏳ BSP Tree 던전 생성 — 명세서 §4.1
-│   ├── dungeon.py    # ⏳ Dungeon 컨테이너
-│   └── fov.py        # ⏳ 시야(FOV) 계산
+│   ├── bsp.py        # ✅ 구현 완료. BSP Tree 던전 생성 — 명세서 §4.1
+│   ├── dungeon.py    # ✅ 구현 완료. Dungeon 컨테이너
+│   └── fov.py        # ✅ 구현 완료. 시야(FOV) 계산
 ├── systems/          # 게임 시스템
-│   ├── turn_manager.py # ⏳ heapq 우선순위 큐 + lazy del — §4.3
-│   ├── undo.py         # ⏳ deque + Command 패턴 — §4.2
-│   ├── inventory.py    # ⏳ dict 해시 테이블 — §4.4
-│   └── ai.py           # ⏳ A* 알고리즘 — §4.5
+│   ├── turn_manager.py # ⏳ 미구현. heapq 우선순위 큐 + lazy del — §4.3
+│   ├── undo.py         # ⏳ 미구현. deque + Command 패턴 — §4.2
+│   ├── inventory.py    # ⏳ 미구현. dict 해시 테이블 — §4.4
+│   └── ai.py           # ✅ 구현 완료. A* 알고리즘 — §4.5
+
 ├── persistence/      # 영속화
 │   ├── avl_tree.py     # ⏳ AVL Tree 자체 구현 — §4.6 (가장 까다로움)
 │   └── leaderboard.py  # ⏳ AVL 기반 리더보드 + JSON
@@ -68,11 +69,11 @@ dungeon_crawler/
 
 | 모듈 | 상태 | 다음 PR 후보 |
 |------|------|--------------|
-| `core/types.py` | ✅ 구현 완료, 22개 단위 테스트 통과 | — |
-| `persistence/avl_tree.py` | ⏳ 미구현 | **다음 차례** (페어 프로그래밍 권장) |
-| `map/bsp.py`, `map/dungeon.py`, `map/fov.py` | ⏳ | 사람 A 묶음 |
-| `systems/ai.py` | ⏳ | 사람 A 묶음 |
-| `systems/turn_manager.py`, `systems/undo.py`, `systems/inventory.py` | ⏳ | 사람 B 묶음 |
+| `core/types.py`, `core/rng.py` | ✅ 구현 완료 | — |
+| `map/bsp.py`, `map/dungeon.py`, `map/fov.py` | ✅ 구현 완료 | — |
+| `systems/ai.py` | ✅ 구현 완료 | — |
+| `persistence/avl_tree.py` | ⏳ 미구현 | **다른 팀원 진행 중** |
+| `systems/turn_manager.py`, `systems/undo.py`, `systems/inventory.py` | ⏳ | 사람 B 묶음 (다음 목표) |
 | `persistence/leaderboard.py` | ⏳ | 사람 B 묶음 |
 | `ui/terminal.py`, `main.py` | ⏳ | 통합 단계 (페어) |
 
