@@ -74,10 +74,47 @@ class AVLTree:
             return self._search(node.right, key)
 
     def insert(self, key: Any, value: Any) -> None:
-        """노드 삽입. 현재는 BST 기본 동작만 수행 (균형 로직 제외)."""
+        """노드 삽입. O(log N)"""
         self.root = self._insert(self.root, key, value)
 
+    def delete(self, key: Any) -> bool:
+        """키 기반 노드 삭제. 성공 시 True, 없으면 False. O(log N)"""
+        original_size = len(self)
+        self.root = self._delete(self.root, key)
+        return len(self) < original_size
+
+    def _delete(self, node: AVLNode | None, key: Any) -> AVLNode | None:
+        if node is None:
+            return None
+
+        if key < node.key:
+            node.left = self._delete(node.left, key)
+        elif key > node.key:
+            node.right = self._delete(node.right, key)
+        else:
+            # 삭제할 노드 발견
+            if node.left is None:
+                return node.right
+            elif node.right is None:
+                return node.left
+            else:
+                # 자식이 둘인 경우: 오른쪽 서브트리의 최솟값(successor)으로 대체
+                successor = self._get_min(node.right)
+                node.key = successor.key
+                node.value = successor.value
+                node.right = self._delete(node.right, successor.key)
+
+        self._update(node)
+        return self._rebalance(node)
+
+    def _get_min(self, node: AVLNode) -> AVLNode:
+        current = node
+        while current.left is not None:
+            current = current.left
+        return current
+
     def _insert(self, node: AVLNode | None, key: Any, value: Any) -> AVLNode:
+
         if node is None:
             return AVLNode(key, value)
 

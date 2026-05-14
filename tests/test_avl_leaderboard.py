@@ -56,3 +56,59 @@ def test_avl_kth_rank():
     assert tree.rank(30) == 2
     assert tree.rank(50) == 4
     assert tree.rank(100) == 5
+
+def test_avl_delete_basic():
+    tree = AVLTree()
+    for i in [10, 20, 5, 15, 25]:
+        tree.insert(i, str(i))
+    
+    # 잎 노드 삭제 (15)
+    assert tree.delete(15) is True
+    assert tree.search(15) is None
+    assert len(tree) == 4
+    
+    # 자식이 하나인 노드 삭제 (20)
+    assert tree.delete(20) is True
+    assert tree.search(20) is None
+    assert tree.search(25) == "25"
+    assert len(tree) == 3
+    
+    # 자식이 둘인 노드 삭제 (10 - 루트)
+    assert tree.delete(10) is True
+    assert tree.search(10) is None
+    assert len(tree) == 2
+    
+    # 존재하지 않는 키 삭제
+    assert tree.delete(100) is False
+
+def test_avl_random_stress():
+    import random
+    tree = AVLTree()
+    keys = list(range(100))
+    random.shuffle(keys)
+    
+    # 100개 삽입
+    for k in keys:
+        tree.insert(k, str(k))
+    
+    assert len(tree) == 100
+    assert tree.root.height <= 8  # log2(100) approx 6.6
+    
+    # 정렬 확인
+    sorted_keys = sorted(keys)
+    tree_keys = [node.key for node in tree.in_order()]
+    assert tree_keys == sorted_keys
+    
+    # 50개 삭제
+    delete_keys = keys[:50]
+    for k in delete_keys:
+        assert tree.delete(k) is True
+    
+    assert len(tree) == 50
+    # 삭제 후에도 균형 확인
+    assert tree.root.height <= 7
+    
+    # 다시 정렬 확인
+    remaining_keys = sorted(keys[50:])
+    tree_keys = [node.key for node in tree.in_order()]
+    assert tree_keys == remaining_keys
