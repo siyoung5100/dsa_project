@@ -1,0 +1,21 @@
+import google.generativeai as genai
+
+# 본인의 API 키를 여기에 넣으세요
+API_KEY = "여기에_복사한_키를_넣으세요"
+genai.configure(api_key=API_KEY)
+
+# 모델 설정
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+print("--- Gemini 대화 시작 (종료하려면 exit 입력) ---")
+
+while True:
+    q = input("질문: ")
+    if q.lower() in ['exit', 'quit']:
+        break
+    
+    try:
+        response = model.generate_content(q)
+        print(f"답변: {response.text}\n")
+    except Exception as e:
+        print(f"오류 발생: {e}")

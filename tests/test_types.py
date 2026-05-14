@@ -9,7 +9,6 @@ from core.types import (
     AttackAction,
     Coord,
     Enemy,
-    Entity,
     Item,
     ItemCategory,
     MoveAction,
