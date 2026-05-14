@@ -27,3 +27,13 @@ def test_avl_insert_overwrite():
     tree.insert(10, "ten")
     tree.insert(10, "new ten")
     assert tree.search(10) == "new ten"
+
+def test_avl_balance_factor():
+    # 1, 2, 3 순서로 삽입 시 RR 상황 -> 좌회전 필요
+    tree = AVLTree()
+    for i in range(1, 8):  # 1~7 삽입
+        tree.insert(i, str(i))
+    
+    # 균형이 잡혔다면 높이는 log2(7) 근처인 3이어야 함 (루트 기준)
+    # 미구현 시에는 7이 됨
+    assert tree.root.height <= 3

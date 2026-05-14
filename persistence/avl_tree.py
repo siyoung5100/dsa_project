@@ -47,8 +47,74 @@ class AVLTree:
             node.right = self._insert(node.right, key, value)
 
         self._update(node)
-        # TODO: self._rebalance(node) 호출 필요
+        return self._rebalance(node)
+
+    def _rebalance(self, node: AVLNode) -> AVLNode:
+        """균형을 맞추고 균형이 잡힌 새 루트 노드를 반환."""
+        balance = self._get_balance(node)
+
+        # LL Case
+        if balance > 1 and self._get_balance(node.left) >= 0:
+            return self._rotate_right(node)
+
+        # LR Case
+        if balance > 1 and self._get_balance(node.left) < 0:
+            node.left = self._rotate_left(node.left)
+            return self._rotate_right(node)
+
+        # RR Case
+        if balance < -1 and self._get_balance(node.right) <= 0:
+            return self._rotate_left(node)
+
+        # RL Case
+        if balance < -1 and self._get_balance(node.right) > 0:
+            node.right = self._rotate_right(node.right)
+            return self._rotate_left(node)
+
         return node
+
+    def _rotate_left(self, z: AVLNode) -> AVLNode:
+        """좌회전 수행.
+             z              y
+            / \\            / \
+           T1  y     ->   z   T3
+              / \\        / \
+             T2  T3     T1  T2
+        """
+        y = z.right
+        assert y is not None
+        t2 = y.left
+
+        y.left = z
+        z.right = t2
+
+        self._update(z)
+        self._update(y)
+        return y
+
+    def _rotate_right(self, z: AVLNode) -> AVLNode:
+        """우회전 수행.
+               z            y
+              / \\          / \
+             y   T3  ->   T1  z
+            / \\              / \
+           T1  T2           T2  T3
+        """
+        y = z.left
+        assert y is not None
+        t2 = y.right
+
+        y.right = z
+        z.left = t2
+
+        self._update(z)
+        self._update(y)
+        return y
+
+    def _get_balance(self, node: AVLNode | None) -> int:
+        if node is None:
+            return 0
+        return self._get_height(node.left) - self._get_height(node.right)
 
     def _update(self, node: AVLNode) -> None:
         """높이와 서브트리 크기 갱신."""
