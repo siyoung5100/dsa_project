@@ -6,14 +6,14 @@
 
 ## 사용한 자료구조 / 알고리즘
 
-| 모듈 | 자료구조 / 알고리즘 | 핵심 복잡도 | 선택 이유 |
-|------|--------------------|------------|----------|
-| 던전 생성 | BSP Tree | O(R log R) | 방 겹침 없는 절차적 생성, 트리 재귀 활용 |
-| Undo 시스템 | Deque + Command | O(1) | `maxlen=30` 자동 관리, Redo 확장 용이 |
-| 턴 관리 | Priority Queue (heapq) | O(log K) | Speed 스탯 반영, lazy deletion 적용 |
-| 인벤토리 | Hash Table (dict) | 평균 O(1) | id 기반 수량 관리 + 카테고리별 UI 친화 |
-| 적 AI | A\* (Manhattan) | O(E log V) | 그리드 최단경로 표준, heap 자료구조 재사용 |
-| 리더보드 | AVL Tree (자체 구현) | O(log N) | insert/rank/kth 모두 균형 보장 |
+| 모듈 | 자료구조 / 알고리즘 | 핵심 복잡도 | 선택 이유 | 상태 |
+|------|--------------------|------------|----------|------|
+| 던전 생성 | BSP Tree | O(R log R) | 방 겹침 없는 절차적 생성, 트리 재귀 활용 | ✅ 구현 완료 |
+| Undo 시스템 | Deque + Command | O(1) | `maxlen=30` 자동 관리, Redo 확장 용이 | ✅ 구현 완료 |
+| 턴 관리 | Priority Queue (heapq) | O(log K) | Speed 스탯 반영, lazy deletion 적용 | ✅ 구현 완료 |
+| 인벤토리 | Hash Table (dict) | 평균 O(1) | id 기반 수량 관리 + 카테고리별 UI 친화 | ✅ 구현 완료 |
+| 적 AI | A\* (Manhattan) | O(E log V) | 그리드 최단경로 표준, heap 자료구조 재사용 | ✅ 구현 완료 |
+| 리더보드 | AVL Tree (자체 구현) | O(log N) | insert/rank/kth 모두 균형 보장 | ✅ 구현 완료 |
 
 자세한 설계 근거는 [docs/spec.md](docs/spec.md) (또는 부모 폴더의 `DSA_구현_명세서.docx` 원본) 참고.
 
