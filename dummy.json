@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Bob",
+    "score": 1000,
+    "play_time_sec": 100,
+    "undo_used": 2,
+    "timestamp": "2026-05-01T10:00:00"
+  },
+  {
+    "name": "Alice",
+    "score": 1000,
+    "play_time_sec": 120,
+    "undo_used": 5,
+    "timestamp": "2026-05-01T10:00:00"
+  },
+  {
+    "name": "Charlie",
+    "score": 500,
+    "play_time_sec": 200,
+    "undo_used": 10,
+    "timestamp": "2026-05-01T10:00:00"
+  }
+]
