@@ -53,11 +53,11 @@ dungeon_crawler/
 │   └── ai.py           # ✅ 구현 완료. A* 알고리즘 — §4.5
 
 ├── persistence/      # 영속화
-│   ├── avl_tree.py     # ⏳ AVL Tree 자체 구현 — §4.6 (가장 까다로움)
-│   └── leaderboard.py  # ⏳ AVL 기반 리더보드 + JSON
+│   ├── avl_tree.py     # ✅ 구현 완료. AVL Tree 자체 구현 — §4.6
+│   └── leaderboard.py  # ✅ 구현 완료. AVL 기반 리더보드 + JSON
 ├── ui/
-│   └── terminal.py   # ⏳ rich + readchar 기반 렌더링/입력
-├── main.py           # ⏳ 게임 엔트리포인트
+│   └── terminal.py   # ⏳ 미구현. rich + readchar 기반 렌더링/입력
+├── main.py           # ⏳ 미구현. 게임 엔트리포인트 (NotImplementedError)
 ├── tests/            # pytest, 미구현 모듈 테스트는 pytest.mark.skip
 └── docs/
     └── spec.md       # 📖 .docx 명세서의 markdown 추출본 (에이전트 참조용)
@@ -65,16 +65,15 @@ dungeon_crawler/
 
 **의존 방향**: `core` ← `map · systems · persistence` ← `ui · main`. 역방향 import 금지. UI 계층은 추후 pygame 등으로 교체 가능해야 한다.
 
-## 구현 상태 (2026-04-28 기준)
+## 구현 상태 (2026-05-18 기준)
 
 | 모듈 | 상태 | 다음 PR 후보 |
 |------|------|--------------|
 | `core/types.py`, `core/rng.py` | ✅ 구현 완료 | — |
 | `map/bsp.py`, `map/dungeon.py`, `map/fov.py` | ✅ 구현 완료 | — |
 | `systems/ai.py` | ✅ 구현 완료 | — |
-| `persistence/avl_tree.py` | ⏳ 미구현 | **다른 팀원 진행 중** |
+| `persistence/avl_tree.py`, `persistence/leaderboard.py` | ✅ 구현 완료 | — |
 | `systems/turn_manager.py`, `systems/undo.py`, `systems/inventory.py` | ⏳ | 사람 B 묶음 (다음 목표) |
-| `persistence/leaderboard.py` | ⏳ | 사람 B 묶음 |
 | `ui/terminal.py`, `main.py` | ⏳ | 통합 단계 (페어) |
 
 ## 변경 시 지켜야 할 규칙 (필수)
