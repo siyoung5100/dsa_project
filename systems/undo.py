@@ -11,3 +11,49 @@
   - remaining: int
   - used: int  # 누적 undo 사용 횟수 (리더보드 지표)
 """
+
+from collections import deque
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from core.types import Action
+
+
+class UndoSystem:
+    def __init__(self, world: Any, limit: int = 30):
+        self.world = world
+        self._history: deque["Action"] = deque(maxlen=limit)
+        self._redo: deque["Action"] = deque(maxlen=limit)
+        self.used: int = 0  # 누적 undo 사용 횟수 (리더보드 지표)
+
+    def execute(self, action: "Action") -> None:
+        """행동을 실행하고 히스토리에 기록한다."""
+        action.do(self.world)
+        self._history.append(action)
+        self._redo.clear()  # 새로운 행동 시 redo 스택 초기화
+
+    def undo(self) -> bool:
+        """가장 최근 행동을 되돌린다."""
+        if not self._history:
+            return False
+        
+        action = self._history.pop()
+        action.undo(self.world)
+        self._redo.append(action)
+        self.used += 1
+        return True
+
+    def redo(self) -> bool:
+        """되돌린 행동을 다시 실행한다."""
+        if not self._redo:
+            return False
+        
+        action = self._redo.pop()
+        action.do(self.world)
+        self._history.append(action)
+        return True
+
+    @property
+    def remaining(self) -> int:
+        """남은 히스토리 저장 공간 (maxlen - 현재 크기)."""
+        return (self._history.maxlen or 0) - len(self._history)
