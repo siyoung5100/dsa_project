@@ -188,12 +188,25 @@ class MoveAction(Action):
     dy: int
 
     def do(self, world: Any) -> None:
-        # TODO: world API 정의 후 구현
-        raise NotImplementedError("MoveAction.do — world 정의 후 구현")
+        new_pos = self.actor.pos + Coord(self.dx, self.dy)
+        if world.is_passable(new_pos):
+            self.actor.pos = new_pos
 
     def undo(self, world: Any) -> None:
-        # TODO: dx, dy의 부호를 뒤집어 적용
-        raise NotImplementedError("MoveAction.undo — world 정의 후 구현")
+        self.actor.pos = self.actor.pos - Coord(self.dx, self.dy)
+
+
+@dataclass
+class WaitAction(Action):
+    """아무것도 하지 않고 턴만 넘긴다."""
+
+    actor: Entity
+
+    def do(self, world: Any) -> None:
+        pass
+
+    def undo(self, world: Any) -> None:
+        pass
 
 
 @dataclass
@@ -209,10 +222,16 @@ class AttackAction(Action):
     _damage_dealt: int = 0  # do() 가 채워넣고 undo() 가 사용
 
     def do(self, world: Any) -> None:
-        raise NotImplementedError("AttackAction.do — world 정의 후 구현")
+        self._damage_dealt = self.target.take_damage(self.attacker.atk)
+        from core.events import events
+        events.log(f"{self.attacker.kind if hasattr(self.attacker, 'kind') else '플레이어'}이(가) "
+                   f"{self.target.kind if hasattr(self.target, 'kind') else '플레이어'}에게 "
+                   f"{self._damage_dealt}의 피해를 입혔습니다.")
 
     def undo(self, world: Any) -> None:
-        raise NotImplementedError("AttackAction.undo — world 정의 후 구현")
+        self.target.hp += self._damage_dealt
+        if self.target.hp > 0:
+            self.target.alive = True
 
 
 @dataclass
@@ -220,14 +239,29 @@ class UseItemAction(Action):
     """actor가 인벤토리의 item_id 아이템을 사용한다."""
 
     actor: Entity
-    item_id: str
+    item: Item  # 명세서에는 item_id였으나 undo를 위해 Item 객체 보관 권장
     _applied_effect: dict[str, int] = field(default_factory=dict)
 
     def do(self, world: Any) -> None:
-        raise NotImplementedError("UseItemAction.do — world 정의 후 구현")
+        # 효과 적용 (현재는 HP 회복만 예시로 구현)
+        if "hp" in self.item.effect:
+            recovered = self.actor.heal(self.item.effect["hp"])
+            self._applied_effect["hp"] = recovered
+        
+        # 인벤토리에서 제거 (카테고리 정보 필요)
+        world.inventory.remove(self.item.id, self.item.category)
+        
+        from core.events import events
+        events.log(f"{self.actor.kind if hasattr(self.actor, 'kind') else '플레이어'}이(가) "
+                   f"{self.item.name}을(를) 사용했습니다.")
 
     def undo(self, world: Any) -> None:
-        raise NotImplementedError("UseItemAction.undo — world 정의 후 구현")
+        # 효과 역산
+        if "hp" in self._applied_effect:
+            self.actor.hp -= self._applied_effect["hp"]
+        
+        # 인벤토리에 다시 추가
+        world.inventory.add(self.item)
 
 
 @dataclass
@@ -239,10 +273,18 @@ class PickupAction(Action):
     item: Item
 
     def do(self, world: Any) -> None:
-        raise NotImplementedError("PickupAction.do — world 정의 후 구현")
+        if world.inventory.add(self.item):
+            world.remove_item(self.tile)
+            from core.events import events
+            events.log(f"{self.item.name}을(를) 주웠습니다.")
+        else:
+            from core.events import events
+            events.log("인벤토리가 가득 찼습니다!")
 
     def undo(self, world: Any) -> None:
-        raise NotImplementedError("PickupAction.undo — world 정의 후 구현")
+        # 인벤토리에서 제거하고 월드에 다시 놓기
+        if world.inventory.remove(self.item.id, self.item.category):
+            world.add_item(self.tile, self.item)
 
 
 # ==============================================================

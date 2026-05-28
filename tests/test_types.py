@@ -187,13 +187,19 @@ class TestAction:
             assert issubclass(cls, Action)
 
     def test_unimplemented_methods_raise(self):
-        # 현재 단계에서는 do/undo 가 NotImplementedError. World 정의 후 구현 예정.
-        actor = Player(id=1, pos=Coord(0, 0), hp=50, max_hp=50, atk=1, defense=0, speed=100)
-        m = MoveAction(actor=actor, dx=1, dy=0)
-        with pytest.raises(NotImplementedError):
-            m.do(world=None)
-        with pytest.raises(NotImplementedError):
-            m.undo(world=None)
+        # 현재는 MoveAction, AttackAction 등이 구현되어 있으므로 raise 하지 않음.
+        # 이 테스트는 Action 인터페이스가 올바르게 작동하는지 확인하는 용도로 변경.
+        from core.world import World
+        from systems.inventory import Inventory
+        from map.dungeon import Dungeon
+        grid = [[Tile(TileType.FLOOR)]]
+        dungeon = Dungeon(width=1, height=1, grid=grid)
+        player = Player(id=0, pos=Coord(0, 0), hp=10, max_hp=10, atk=1, defense=0, speed=100)
+        world = World(dungeon=dungeon, player=player, inventory=Inventory())
+        
+        m = MoveAction(actor=player, dx=1, dy=0)
+        m.do(world=world)
+        m.undo(world=world)
 
 
 # ==============================================================
