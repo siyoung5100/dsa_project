@@ -22,10 +22,10 @@ if TYPE_CHECKING:
 class TurnManager:
     def __init__(self):
         # (at, tie-break, entity)
-        self._heap: list[tuple[int, int, "Entity"]] = []
+        self._heap: list[tuple[int, int, Entity]] = []
         self._counter = itertools.count()  # tie-break용 카운터
-        self._dead: set[int] = set()       # lazy 삭제를 위한 ID 집합
-        self._now: int = 0                 # 현재 "시간" 또는 "틱"
+        self._dead: set[int] = set()  # lazy 삭제를 위한 ID 집합
+        self._now: int = 0  # 현재 "시간" 또는 "틱"
 
     def schedule(self, entity: "Entity", at: int) -> None:
         """엔티티를 특정 시점에 행동하도록 예약한다."""
@@ -35,11 +35,11 @@ class TurnManager:
         """다음 행동할 엔티티를 반환한다. 죽은 엔티티는 건너뛴다."""
         while self._heap:
             t, _, e = heapq.heappop(self._heap)
-            
+
             # Lazy deletion: 죽은 엔티티거나 alive 플래그가 꺼진 경우 스킵
             if e.id in self._dead or not e.alive:
                 continue
-            
+
             self._now = t
             return e
         return None

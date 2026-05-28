@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 @dataclass
 class Slot:
     """인벤토리의 한 슬롯. 아이템 정보와 수량을 가진다."""
+
     item: "Item"
     count: int
 
@@ -28,17 +29,15 @@ class Slot:
 class Inventory:
     def __init__(self, capacity_per_cat: int = 20):
         from core.types import ItemCategory
-        
+
         self.capacity = capacity_per_cat
         # 카테고리별로 아이템 ID를 키로 하는 dict 관리
-        self._by_cat: dict["ItemCategory", dict[str, Slot]] = {
-            c: {} for c in ItemCategory
-        }
+        self._by_cat: dict[ItemCategory, dict[str, Slot]] = {c: {} for c in ItemCategory}
 
     def add(self, item: "Item", count: int = 1) -> bool:
         """아이템을 추가한다. 성공 시 True, 용량 초과 시 False 반환."""
         bucket = self._by_cat[item.category]
-        
+
         if item.id in bucket:
             bucket[item.id].count += count
             return True
@@ -53,10 +52,10 @@ class Inventory:
         """아이템 수량을 줄인다. 성공 시 True, 부족하거나 없을 시 False 반환."""
         bucket = self._by_cat[category]
         slot = bucket.get(item_id)
-        
+
         if slot is None or slot.count < count:
             return False
-        
+
         slot.count -= count
         if slot.count <= 0:
             del bucket[item_id]

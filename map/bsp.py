@@ -57,7 +57,7 @@ def generate_dungeon(
 ) -> Dungeon:
     """BSP로 던전을 생성해 Dungeon 객체를 반환."""
     rng = RNG(seed)
-    root = BSPNode(Rect(0, 0, width, height))
+    root = BSPNode(Rect(1, 1, width - 2, height - 2))
 
     # 1. 재귀 분할
     _split(root, 0, min_leaf, max_depth, rng)
@@ -136,15 +136,20 @@ def _create_rooms(node: BSPNode, rng: RNG, min_leaf: int) -> None:
         return
 
     # 리프 노드: 방 생성
-    # 최소 크기는 3x3 정도로 보장 (min_leaf가 작을 수 있으므로)
+    # 최소 크기는 4x4 정도로 보장
     min_w, min_h = 4, 4
-    if node.rect.w < min_w or node.rect.h < min_h:
+    padding = 2
+    if node.rect.w < min_w + 2 * padding or node.rect.h < min_h + 2 * padding:
+        # 방이 들어갈 공간이 부족한 경우 패딩을 1로 완화
+        padding = 1
+
+    if node.rect.w < min_w + 2 * padding or node.rect.h < min_h + 2 * padding:
         return
 
-    w = rng.randint(min_w, node.rect.w - 1)
-    h = rng.randint(min_h, node.rect.h - 1)
-    x = rng.randint(node.rect.x + 1, node.rect.x + node.rect.w - w)
-    y = rng.randint(node.rect.y + 1, node.rect.y + node.rect.h - h)
+    w = rng.randint(min_w, node.rect.w - 2 * padding)
+    h = rng.randint(min_h, node.rect.h - 2 * padding)
+    x = rng.randint(node.rect.x + padding, node.rect.x + node.rect.w - padding - w)
+    y = rng.randint(node.rect.y + padding, node.rect.y + node.rect.h - padding - h)
 
     node.room = Rect(x, y, w, h)
 

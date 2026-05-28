@@ -80,11 +80,37 @@ class EnemyAI:
     def decide(self, enemy: Enemy, player_pos: Coord, world: Any) -> Action:
         """현재 상태에서 적이 취할 최선의 행동을 결정.
 
-        1. 플레이어와 인접하면 공격 (AttackAction - 추후 구현)
-        2. 아니면 A*로 추적
-        3. 경로 캐시를 활용해 연산 절약
+        1. 동일한 방(Room)에 둘 다 존재하는가?
+        2. 그렇다면 맨해튼 거리가 8 이하인가?
+        3. 만족하지 않으면 대기 (MoveAction(enemy, 0, 0))
+        4. 만족하면 A* 추적 및 인접 시 공격
         """
+        # 복합 인식 조건 검증
+        enemy_room = None
+        player_room = None
+
+        if hasattr(world, "dungeon") and hasattr(world.dungeon, "rooms"):
+            for room in world.dungeon.rooms:
+                if (
+                    room.x <= enemy.pos.x < room.x + room.w
+                    and room.y <= enemy.pos.y < room.y + room.h
+                ):
+                    enemy_room = room
+                if (
+                    room.x <= player_pos.x < room.x + room.w
+                    and room.y <= player_pos.y < room.y + room.h
+                ):
+                    player_room = room
+
+        # 둘 중 하나가 방에 없거나(예: 복도) 서로 다른 방에 있는 경우 -> 미인식
+        if enemy_room is None or player_room is None or enemy_room != player_room:
+            return MoveAction(enemy, 0, 0)
+
         dist = manhattan(enemy.pos, player_pos)
+
+        # 방은 같으나 인식 범위 8타일을 초과하는 경우 -> 미인식
+        if dist > 8:
+            return MoveAction(enemy, 0, 0)
 
         # 공격 사거리 안 (상하좌우 인접)
         if dist == 1:

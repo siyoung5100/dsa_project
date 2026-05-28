@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 
 from core.types import (
@@ -39,7 +41,7 @@ class TestCoord:
         # frozen=True 이므로 dict 키, set 원소로 사용 가능 — A* 의 핵심 요건
         assert {c: "ok"}[Coord(1, 2)] == "ok"
         assert Coord(1, 2) in {Coord(1, 2)}
-        with pytest.raises(Exception):
+        with pytest.raises(FrozenInstanceError):
             c.x = 999  # type: ignore[misc]
 
 
@@ -190,13 +192,14 @@ class TestAction:
         # 현재는 MoveAction, AttackAction 등이 구현되어 있으므로 raise 하지 않음.
         # 이 테스트는 Action 인터페이스가 올바르게 작동하는지 확인하는 용도로 변경.
         from core.world import World
-        from systems.inventory import Inventory
         from map.dungeon import Dungeon
+        from systems.inventory import Inventory
+
         grid = [[Tile(TileType.FLOOR)]]
         dungeon = Dungeon(width=1, height=1, grid=grid)
         player = Player(id=0, pos=Coord(0, 0), hp=10, max_hp=10, atk=1, defense=0, speed=100)
         world = World(dungeon=dungeon, player=player, inventory=Inventory())
-        
+
         m = MoveAction(actor=player, dx=1, dy=0)
         m.do(world=world)
         m.undo(world=world)
@@ -234,7 +237,7 @@ class TestRecord:
             undo_used=0,
             timestamp="2026-04-28T19:00:00Z",
         )
-        with pytest.raises(Exception):
+        with pytest.raises(FrozenInstanceError):
             r.score = 9999  # type: ignore[misc]
 
     def test_leaderboard_sort_key_orders_by_score_desc(self):

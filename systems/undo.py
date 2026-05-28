@@ -13,7 +13,7 @@
 """
 
 from collections import deque
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from core.types import Action
@@ -22,8 +22,8 @@ if TYPE_CHECKING:
 class UndoSystem:
     def __init__(self, world: Any, limit: int = 30):
         self.world = world
-        self._history: deque["Action"] = deque(maxlen=limit)
-        self._redo: deque["Action"] = deque(maxlen=limit)
+        self._history: deque[Action] = deque(maxlen=limit)
+        self._redo: deque[Action] = deque(maxlen=limit)
         self.used: int = 0  # 누적 undo 사용 횟수 (리더보드 지표)
 
     def execute(self, action: "Action") -> None:
@@ -36,7 +36,7 @@ class UndoSystem:
         """가장 최근 행동을 되돌린다."""
         if not self._history:
             return False
-        
+
         action = self._history.pop()
         action.undo(self.world)
         self._redo.append(action)
@@ -47,7 +47,7 @@ class UndoSystem:
         """되돌린 행동을 다시 실행한다."""
         if not self._redo:
             return False
-        
+
         action = self._redo.pop()
         action.do(self.world)
         self._history.append(action)
