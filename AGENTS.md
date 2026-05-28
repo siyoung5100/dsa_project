@@ -2,6 +2,20 @@
 
 > 이 문서는 Claude Code · Gemini CLI · Cursor 등 AI 코딩 에이전트가 본 저장소에서 작업할 때 가장 먼저 읽어야 할 파일입니다. 사람을 위한 소개는 [README.md](README.md), 협업 규칙은 [CONTRIBUTING.md](CONTRIBUTING.md), 상세 설계는 [docs/spec.md](docs/spec.md)를 참고하세요.
 
+## 관련 문서 (Related Documents)
+
+이 프로젝트의 원활한 협업과 규칙 이행을 위해 에이전트는 다음 문서들을 선제적으로 읽고 작동해야 합니다:
+
+- **협업 및 기여 규칙**: [CONTRIBUTING.md](CONTRIBUTING.md) (Conventional Commits 한국어 규칙, PR 생성 룰)
+- **상세 설계 및 명세**: [docs/spec.md](docs/spec.md) (6대 핵심 알고리즘 의사코드, 시야/뷰포트 스펙 및 단위 테스트 설계)
+- **프로젝트 총괄 소개**: [README.md](README.md) (전반적인 아키텍처 및 자료구조 선정 배경 소개)
+- **GitHub 연동 템플릿**:
+  - PR 작성 양식: [.github/pull_request_template.md](.github/pull_request_template.md)
+  - 버그 리포트 양식: [.github/ISSUE_TEMPLATE/bug_report.md](.github/ISSUE_TEMPLATE/bug_report.md)
+  - 신규 기능 제안 양식: [.github/ISSUE_TEMPLATE/feature_request.md](.github/ISSUE_TEMPLATE/feature_request.md)
+
+---
+
 ## TL;DR
 
 대학 "자료구조와 알고리즘" 수업의 기말 프로젝트. **Python으로 구현하는 2D 그리드 턴제 던전 크롤러 RPG**. 6개 자료구조/알고리즘(BSP·Deque·heapq·Hash·A\*·AVL)을 실제 게임 문제에 적용하는 것이 목적입니다.
@@ -36,7 +50,7 @@ ruff check .
 dungeon_crawler/
 ├── AGENTS.md  ← 너 (지금 읽는 파일)
 ├── CLAUDE.md  ← @AGENTS.md (단순 import)
-├── README.md, CONTRIBUTING.md, SETUP.md
+├── README.md, CONTRIBUTING.md
 ├── pyproject.toml, requirements*.txt, .gitignore, .gitattributes
 ├── core/             # 공통 데이터 타입 (의존 그래프 루트, 누구에게도 의존하지 않음)
 │   ├── types.py      # ✅ 구현 완료. Coord, Tile, Entity, Player, Enemy, Item, Action, Record
@@ -225,10 +239,6 @@ pytest
 - 게임 디자인 디테일 (HP 수치, 던전 크기, 적 종류 등) — PPT 초안과 일치하는 합리적 기본값 사용 후 사람이 검토
 - 테스트 케이스 추가 — 새 케이스의 의도를 한 줄로 설명
 
-## 관련 문서
+## 인간 제출용 원본 문서
 
-- [README.md](README.md) — 사람용 프로젝트 소개
-- [CONTRIBUTING.md](CONTRIBUTING.md) — 협업 규칙 상세 (Conventional Commits 한국어, PR 룰)
-- [SETUP.md](SETUP.md) — 최초 git init / GitHub 푸시 / 팀원 클론 절차
-- [docs/spec.md](docs/spec.md) — 구현 명세서 전문 (markdown)
-- 부모 폴더의 `.docx` 4개 — 인간 제출용 (계획서, 명세서, 중간점검, 원본 PPT)
+- **부모 폴더의 `.docx` 4개** — 학기 제출용 최종본 (계획서, 명세서, 중간점검, 원본 PPT)
