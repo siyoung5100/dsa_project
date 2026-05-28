@@ -21,7 +21,7 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 # 2) 의존성 (개발용 포함)
 pip install -r requirements-dev.txt
 
-# 3) 실행 (현재는 NotImplementedError)
+# 3) 실행
 python main.py
 
 # 4) 테스트 / 포맷 / 린트
@@ -41,31 +41,31 @@ dungeon_crawler/
 ├── core/             # 공통 데이터 타입 (의존 그래프 루트, 누구에게도 의존하지 않음)
 │   ├── types.py      # ✅ 구현 완료. Coord, Tile, Entity, Player, Enemy, Item, Action, Record
 │   ├── rng.py        # ✅ 구현 완료. seed 고정 랜덤 래퍼
-│   └── events.py     # ⏳ 미구현. 이벤트 로그 큐
+│   └── events.py     # ✅ 구현 완료. 이벤트 로그 큐
 ├── map/              # 던전 맵 / 시야
 │   ├── bsp.py        # ✅ 구현 완료. BSP Tree 던전 생성 — 명세서 §4.1
 │   ├── dungeon.py    # ✅ 구현 완료. Dungeon 컨테이너
 │   └── fov.py        # ✅ 구현 완료. 시야(FOV) 계산
 ├── systems/          # 게임 시스템
-│   ├── turn_manager.py # ⏳ 미구현. heapq 우선순위 큐 + lazy del — §4.3
-│   ├── undo.py         # ⏳ 미구현. deque + Command 패턴 — §4.2
-│   ├── inventory.py    # ⏳ 미구현. dict 해시 테이블 — §4.4
+│   ├── turn_manager.py # ✅ 구현 완료. heapq 우선순위 큐 + lazy del — §4.3
+│   ├── undo.py         # ✅ 구현 완료. deque + Command 패턴 — §4.2
+│   ├── inventory.py    # ✅ 구현 완료. dict 해시 테이블 — §4.4
 │   └── ai.py           # ✅ 구현 완료. A* 알고리즘 — §4.5
 
 ├── persistence/      # 영속화
 │   ├── avl_tree.py     # ✅ 구현 완료. AVL Tree 자체 구현 — §4.6
 │   └── leaderboard.py  # ✅ 구현 완료. AVL 기반 리더보드 + JSON
 ├── ui/
-│   └── terminal.py   # ⏳ 미구현. rich + readchar 기반 렌더링/입력
-├── main.py           # ⏳ 미구현. 게임 엔트리포인트 (NotImplementedError)
-├── tests/            # pytest, 미구현 모듈 테스트는 pytest.mark.skip
+│   └── terminal.py   # ✅ 구현 완료. rich + readchar 기반 스크롤 뷰포트 렌더링/입력
+├── main.py           # ✅ 구현 완료. 게임 엔트리포인트
+├── tests/            # pytest 기반 단위 테스트 스위트
 └── docs/
     └── spec.md       # 📖 .docx 명세서의 markdown 추출본 (에이전트 참조용)
 ```
 
 **의존 방향**: `core` ← `map · systems · persistence` ← `ui · main`. 역방향 import 금지. UI 계층은 추후 pygame 등으로 교체 가능해야 한다.
 
-## 구현 상태 (2026-05-18 기준)
+## 구현 상태 (2026-05-28 기준)
 
 | 모듈 | 상태 | 다음 PR 후보 |
 |------|------|--------------|
@@ -73,8 +73,8 @@ dungeon_crawler/
 | `map/bsp.py`, `map/dungeon.py`, `map/fov.py` | ✅ 구현 완료 | — |
 | `systems/ai.py` | ✅ 구현 완료 | — |
 | `persistence/avl_tree.py`, `persistence/leaderboard.py` | ✅ 구현 완료 | — |
-| `systems/turn_manager.py`, `systems/undo.py`, `systems/inventory.py` | ⏳ | 사람 B 묶음 (다음 목표) |
-| `ui/terminal.py`, `main.py` | ⏳ | 통합 단계 (페어) |
+| `systems/turn_manager.py`, `systems/undo.py`, `systems/inventory.py` | ✅ 구현 완료 | — |
+| `ui/terminal.py`, `main.py` | ✅ 구현 완료 | — |
 
 ## 변경 시 지켜야 할 규칙 (필수)
 
@@ -123,9 +123,9 @@ pytest
 
 ### 5. 테스트
 
-- 새 코드는 가능한 한 단위 테스트와 함께 PR에 포함.
-- `tests/test_<모듈>.py` 파일은 이미 stub 형태로 존재하며 `pytestmark = pytest.mark.skip`으로 표시되어 있다. 모듈 구현이 시작되면 해당 skip을 제거하고 실제 테스트를 채운다.
-- 테스트 시나리오는 [docs/spec.md §5](docs/spec.md)에 정리되어 있다.
+- 새 기능이나 버그 수정은 반드시 관련 단위 테스트와 함께 PR에 포함시킵니다.
+- 과거 미구현 모듈의 stub 및 `pytestmark = pytest.mark.skip` 처리는 현재 모두 제거되었으며, 모든 테스트 스위트가 활성화되어 정상적으로 검증을 수행하고 있습니다.
+- 테스트 시나리오는 [docs/spec.md §5](docs/spec.md)에 상세히 명시되어 있습니다.
 
 ### 6. 엄격한 TDD (Test-Driven Development) 적용
 

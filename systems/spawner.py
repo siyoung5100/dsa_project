@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import random
 from typing import TYPE_CHECKING
 
-from core.types import Enemy, Item, ItemCategory, Coord
+from core.types import Coord, Enemy, Item, ItemCategory
 
 if TYPE_CHECKING:
-    from core.world import World
     from core.rng import RNG
+    from core.world import World
 
 
 class Spawner:
@@ -56,7 +55,7 @@ class Spawner:
             ("slime", 10, 2, 0, 120),
         ]
         kind, hp, atk, defense, speed = self.rng.choice(kinds)
-        
+
         enemy = Enemy(
             id=self._entity_id_counter,
             pos=pos,
@@ -65,7 +64,7 @@ class Spawner:
             atk=atk,
             defense=defense,
             speed=speed,
-            kind=kind
+            kind=kind,
         )
         self._entity_id_counter += 1
         return enemy

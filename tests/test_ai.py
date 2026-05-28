@@ -70,3 +70,50 @@ def test_a_star_unreachable():
 def test_manhattan():
     assert manhattan(Coord(0, 0), Coord(3, 4)) == 7
     assert manhattan(Coord(1, 1), Coord(1, 1)) == 0
+
+
+def test_enemy_ai_perception():
+    """복합 몬스터 인식 로직(다른 방 차단, 같은 방 내 거리 8이내 한정) 검증."""
+    from core.types import Enemy, Player, Tile, TileType
+    from core.world import World
+    from map.bsp import Rect
+    from map.dungeon import Dungeon
+    from systems.ai import EnemyAI
+    from systems.inventory import Inventory
+
+    # 15x15 빈 그리드 던전 생성
+    grid = [[Tile(TileType.FLOOR) for _ in range(15)] for _ in range(15)]
+    dungeon = Dungeon(width=15, height=15, grid=grid)
+
+    # 방 2개 배치 (Room 1: (0,0)에서 5x5, Room 2: (6,0)에서 5x5)
+    r1 = Rect(x=0, y=0, w=5, h=5)
+    r2 = Rect(x=6, y=0, w=5, h=5)
+    dungeon.rooms = [r1, r2]
+
+    # 몬스터(Enemy)와 플레이어(Player) 생성
+    enemy = Enemy(
+        id=1, pos=Coord(4, 1), hp=10, max_hp=10, atk=1, defense=0, speed=100, kind="goblin"
+    )
+    player = Player(id=0, pos=Coord(2, 2), hp=100, max_hp=100, atk=10, defense=2, speed=100)
+
+    world = World(dungeon=dungeon, player=player, inventory=Inventory(), entities=[enemy])
+    ai = EnemyAI()
+
+    # Case 1: 같은 방(r1)에 있고 거리가 가까울 때 (맨해튼 거리 = 3 <= 8)
+    # A* 추적으로 플레이어 방향으로 접근해야 함.
+    action = ai.decide(enemy, player.pos, world)
+    assert action.dx != 0 or action.dy != 0
+
+    # Case 2: 서로 다른 방에 있을 때 (플레이어는 r1(2,2), 몬스터는 r2(8,2))
+    # 다른 방에 있으므로 인식하지 못하고 MoveAction(0, 0)을 반환해야 함.
+    enemy.pos = Coord(8, 2)
+    action = ai.decide(enemy, player.pos, world)
+    assert action.dx == 0 and action.dy == 0
+
+    # Case 3: 같은 방에 있지만 맨해튼 거리가 8을 초과할 때 (거리 = 9)
+    dungeon.rooms = [Rect(x=0, y=0, w=12, h=12)]
+    player.pos = Coord(1, 1)
+    enemy.pos = Coord(10, 1)
+
+    action = ai.decide(enemy, player.pos, world)
+    assert action.dx == 0 and action.dy == 0

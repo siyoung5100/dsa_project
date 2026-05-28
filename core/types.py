@@ -224,9 +224,12 @@ class AttackAction(Action):
     def do(self, world: Any) -> None:
         self._damage_dealt = self.target.take_damage(self.attacker.atk)
         from core.events import events
-        events.log(f"{self.attacker.kind if hasattr(self.attacker, 'kind') else '플레이어'}이(가) "
-                   f"{self.target.kind if hasattr(self.target, 'kind') else '플레이어'}에게 "
-                   f"{self._damage_dealt}의 피해를 입혔습니다.")
+
+        events.log(
+            f"{self.attacker.kind if hasattr(self.attacker, 'kind') else '플레이어'}이(가) "
+            f"{self.target.kind if hasattr(self.target, 'kind') else '플레이어'}에게 "
+            f"{self._damage_dealt}의 피해를 입혔습니다."
+        )
 
     def undo(self, world: Any) -> None:
         self.target.hp += self._damage_dealt
@@ -247,19 +250,22 @@ class UseItemAction(Action):
         if "hp" in self.item.effect:
             recovered = self.actor.heal(self.item.effect["hp"])
             self._applied_effect["hp"] = recovered
-        
+
         # 인벤토리에서 제거 (카테고리 정보 필요)
         world.inventory.remove(self.item.id, self.item.category)
-        
+
         from core.events import events
-        events.log(f"{self.actor.kind if hasattr(self.actor, 'kind') else '플레이어'}이(가) "
-                   f"{self.item.name}을(를) 사용했습니다.")
+
+        events.log(
+            f"{self.actor.kind if hasattr(self.actor, 'kind') else '플레이어'}이(가) "
+            f"{self.item.name}을(를) 사용했습니다."
+        )
 
     def undo(self, world: Any) -> None:
         # 효과 역산
         if "hp" in self._applied_effect:
             self.actor.hp -= self._applied_effect["hp"]
-        
+
         # 인벤토리에 다시 추가
         world.inventory.add(self.item)
 
@@ -276,9 +282,11 @@ class PickupAction(Action):
         if world.inventory.add(self.item):
             world.remove_item(self.tile)
             from core.events import events
+
             events.log(f"{self.item.name}을(를) 주웠습니다.")
         else:
             from core.events import events
+
             events.log("인벤토리가 가득 찼습니다!")
 
     def undo(self, world: Any) -> None:
