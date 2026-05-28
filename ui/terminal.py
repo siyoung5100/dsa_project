@@ -292,103 +292,108 @@ class TerminalUI:
         cat_idx = 0
         selected_item_idx = 0
 
-        while True:
-            current_cat = categories[cat_idx]
-            slots = inventory.list(current_cat)
+        try:
+            while True:
+                current_cat = categories[cat_idx]
+                slots = inventory.list(current_cat)
 
-            # 카테고리 탭 렌더링
-            tabs = Text()
-            for i, cat in enumerate(categories):
-                indicator = "▶ " if i == cat_idx else "  "
-                suffix = " ◀" if i == cat_idx else "  "
-                tab_text = f"{indicator}[{cat.value}]{suffix}"
+                # 카테고리 탭 렌더링
+                tabs = Text()
+                for i, cat in enumerate(categories):
+                    indicator = "▶ " if i == cat_idx else "  "
+                    suffix = " ◀" if i == cat_idx else "  "
+                    tab_text = f"{indicator}[{cat.value}]{suffix}"
 
-                if i == cat_idx:
-                    tabs.append(tab_text, style="bold cyan")
+                    if i == cat_idx:
+                        tabs.append(tab_text, style="bold cyan")
+                    else:
+                        tabs.append(tab_text, style="grey37")
+                    tabs.append("     ")
+
+                # 아이템 테이블 구성
+                table = Table(
+                    title="🎒 INVENTORY 🎒",
+                    border_style="bold green",
+                    title_style="bold green",
+                    expand=True,
+                )
+                table.add_column("선택", justify="center", width=4)
+                table.add_column("아이템 이름", justify="left")
+                table.add_column("수량", justify="center", width=6)
+                table.add_column("효과", justify="left")
+
+                if not slots:
+                    selected_item_idx = 0
+                    table.add_row("", "[grey37](아이템 없음)[/grey37]", "", "")
                 else:
-                    tabs.append(tab_text, style="grey37")
-                tabs.append("     ")
+                    # 인덱스 바운드 방지
+                    selected_item_idx = max(0, min(len(slots) - 1, selected_item_idx))
 
-            # 아이템 테이블 구성
-            table = Table(
-                title="🎒 INVENTORY 🎒",
-                border_style="bold green",
-                title_style="bold green",
-                expand=True,
-            )
-            table.add_column("선택", justify="center", width=4)
-            table.add_column("아이템 이름", justify="left")
-            table.add_column("수량", justify="center", width=6)
-            table.add_column("효과", justify="left")
+                    for idx, slot in enumerate(slots):
+                        item = slot.item
+                        is_selected = idx == selected_item_idx
+                        sel_indicator = "▶" if is_selected else " "
 
-            if not slots:
-                selected_item_idx = 0
-                table.add_row("", "[grey37](아이템 없음)[/grey37]", "", "")
-            else:
-                # 인덱스 바운드 방지
-                selected_item_idx = max(0, min(len(slots) - 1, selected_item_idx))
+                        # 효과 포맷팅
+                        eff_parts = []
+                        for stat, val in item.effect.items():
+                            if stat == "hp":
+                                eff_parts.append(f"HP +{val}")
+                            elif stat == "atk":
+                                eff_parts.append(f"ATK +{val}")
+                            elif stat == "defense":
+                                eff_parts.append(f"DEF +{val}")
+                        eff_str = ", ".join(eff_parts)
 
-                for idx, slot in enumerate(slots):
-                    item = slot.item
-                    is_selected = idx == selected_item_idx
-                    sel_indicator = "▶" if is_selected else " "
+                        row_style = "bold yellow" if is_selected else "white"
+                        table.add_row(
+                            sel_indicator, item.name, str(slot.count), eff_str, style=row_style
+                        )
 
-                    # 효과 포맷팅
-                    eff_parts = []
-                    for stat, val in item.effect.items():
-                        if stat == "hp":
-                            eff_parts.append(f"HP +{val}")
-                        elif stat == "atk":
-                            eff_parts.append(f"ATK +{val}")
-                        elif stat == "defense":
-                            eff_parts.append(f"DEF +{val}")
-                    eff_str = ", ".join(eff_parts)
+                # 전체 레이아웃 구성
+                grid = Table.grid(expand=True)
+                grid.add_column(justify="center")
+                grid.add_row(tabs)
+                grid.add_row("")
+                grid.add_row(table)
+                grid.add_row("")
 
-                    row_style = "bold yellow" if is_selected else "white"
-                    table.add_row(
-                        sel_indicator, item.name, str(slot.count), eff_str, style=row_style
-                    )
+                # 키 안내
+                hint = Text(
+                    "←/→ : 탭 이동  |  ↑/↓ : 아이템 선택  |  Enter : 사용  |  ESC/Q : 닫기",
+                    style="grey46",
+                    justify="center",
+                )
+                grid.add_row(hint)
 
-            # 전체 레이아웃 구성
-            grid = Table.grid(expand=True)
-            grid.add_column(justify="center")
-            grid.add_row(tabs)
-            grid.add_row("")
-            grid.add_row(table)
-            grid.add_row("")
+                # Live 업데이트를 통해 깜빡임 없이 안전하게 화면 렌더링
+                self.live.update(
+                    Panel(grid, border_style="bold green", padding=(1, 4)), refresh=True
+                )
 
-            # 키 안내
-            hint = Text(
-                "←/→ : 탭 이동  |  ↑/↓ : 아이템 선택  |  Enter : 사용  |  ESC/Q : 닫기",
-                style="grey46",
-                justify="center",
-            )
-            grid.add_row(hint)
-
-            # 콘솔에 렌더링
-            self.console.clear()
-            self.console.print(Panel(grid, border_style="bold green", padding=(1, 4)))
-
-            # 키 입력 대기
-            cmd = self.get_input()
-            if cmd == "quit":
-                return None
-            elif cmd == "left":
-                cat_idx = (cat_idx - 1) % len(categories)
-                selected_item_idx = 0
-            elif cmd == "right":
-                cat_idx = (cat_idx + 1) % len(categories)
-                selected_item_idx = 0
-            elif cmd == "up":
-                if slots:
-                    selected_item_idx = (selected_item_idx - 1) % len(slots)
-            elif cmd == "down":
-                if slots:
-                    selected_item_idx = (selected_item_idx + 1) % len(slots)
-            elif cmd == "select":
-                if slots:
-                    return slots[selected_item_idx].item
-                return None
+                # 키 입력 대기
+                cmd = self.get_input()
+                if cmd == "quit":
+                    return None
+                elif cmd == "left":
+                    cat_idx = (cat_idx - 1) % len(categories)
+                    selected_item_idx = 0
+                elif cmd == "right":
+                    cat_idx = (cat_idx + 1) % len(categories)
+                    selected_item_idx = 0
+                elif cmd == "up":
+                    if slots:
+                        selected_item_idx = (selected_item_idx - 1) % len(slots)
+                elif cmd == "down":
+                    if slots:
+                        selected_item_idx = (selected_item_idx + 1) % len(slots)
+                elif cmd == "select":
+                    if slots:
+                        return slots[selected_item_idx].item
+                    return None
+        finally:
+            # 인벤토리 종료 시 화면을 기존 인게임 레이아웃으로 안전하게 롤백
+            self.live.update(self.layout, refresh=True)
 
     def show_leaderboard(self, leaderboard: Any) -> None:
         """리더보드 목록을 rich.table로 액자처럼 그려주고 아무 키나 입력하면 메뉴로 복귀."""
