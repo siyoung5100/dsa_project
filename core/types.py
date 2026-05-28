@@ -246,10 +246,17 @@ class UseItemAction(Action):
     _applied_effect: dict[str, int] = field(default_factory=dict)
 
     def do(self, world: Any) -> None:
-        # 효과 적용 (현재는 HP 회복만 예시로 구현)
-        if "hp" in self.item.effect:
-            recovered = self.actor.heal(self.item.effect["hp"])
-            self._applied_effect["hp"] = recovered
+        # 효과 적용
+        for stat, val in self.item.effect.items():
+            if stat == "hp":
+                recovered = self.actor.heal(val)
+                self._applied_effect["hp"] = recovered
+            elif stat == "atk":
+                self.actor.atk += val
+                self._applied_effect["atk"] = val
+            elif stat == "defense":
+                self.actor.defense += val
+                self._applied_effect["defense"] = val
 
         # 인벤토리에서 제거 (카테고리 정보 필요)
         world.inventory.remove(self.item.id, self.item.category)
@@ -263,8 +270,13 @@ class UseItemAction(Action):
 
     def undo(self, world: Any) -> None:
         # 효과 역산
-        if "hp" in self._applied_effect:
-            self.actor.hp -= self._applied_effect["hp"]
+        for stat, val in self._applied_effect.items():
+            if stat == "hp":
+                self.actor.hp -= val
+            elif stat == "atk":
+                self.actor.atk -= val
+            elif stat == "defense":
+                self.actor.defense -= val
 
         # 인벤토리에 다시 추가
         world.inventory.add(self.item)

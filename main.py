@@ -16,7 +16,7 @@ from pathlib import Path
 
 from core.events import events
 from core.rng import RNG
-from core.types import AttackAction, Coord, MoveAction, PickupAction, Player, Record
+from core.types import AttackAction, Coord, MoveAction, PickupAction, Player, Record, UseItemAction
 from core.world import World
 from map.bsp import generate_dungeon
 from map.fov import compute_fov
@@ -135,6 +135,13 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
                         events.log("미래를 다시 썼습니다.")
                         ui.render(world, messages=events.get_logs())
                     continue
+                elif cmd == "inventory":
+                    item = ui.show_inventory(world.inventory)
+                    if item:
+                        action = UseItemAction(player, item)
+                    else:
+                        ui.render(world, messages=events.get_logs())
+                        continue
                 elif cmd == "pickup":
                     item = world.get_item_at(player.pos)
                     if item:
