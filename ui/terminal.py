@@ -17,6 +17,8 @@ from core.types import TileType
 if TYPE_CHECKING:
     from core.types import Coord, Player
     from core.world import World
+    from systems.turn_manager import TurnManager
+    from systems.undo import UndoSystem
 
 
 class TerminalUI:
@@ -282,6 +284,161 @@ class TerminalUI:
                 return choice_map.get(choice, "exit")
             elif cmd == "quit":
                 return "exit"
+
+    def show_inventory(
+        self,
+        world: World,
+        undo_system: UndoSystem,
+        turn_manager: TurnManager,
+    ) -> bool:
+        """인벤토리 화면을 표시하고 플레이어가 아이템을 하나라도 사용했는지 여부를 반환합니다.
+
+        화면 오른쪽에는 플레이어의 스탯 정보(실시간 갱신)를,
+        화면 왼쪽에는 인벤토리 목록을 2분할 레이아웃으로 미려하게 출력합니다.
+        하단에는 액티비티 로그를 실시간 출력하여 아이템 사용 효과를 즉시 피드백받도록 합니다.
+        """
+        from core.events import events
+        from core.types import ItemCategory, UseItemAction
+
+        categories = list(ItemCategory)
+        cat_idx = 0
+        selected_item_idx = 0
+        used_any_item = False
+
+        try:
+            while True:
+                current_cat = categories[cat_idx]
+                slots = world.inventory.list(current_cat)
+
+                # 1. 카테고리 탭 렌더링
+                tabs = Text()
+                for i, cat in enumerate(categories):
+                    indicator = "▶ " if i == cat_idx else "  "
+                    suffix = " ◀" if i == cat_idx else "  "
+                    tab_text = f"{indicator}[{cat.value}]{suffix}"
+
+                    if i == cat_idx:
+                        tabs.append(tab_text, style="bold cyan")
+                    else:
+                        tabs.append(tab_text, style="grey37")
+                    tabs.append("     ")
+
+                # 2. 왼쪽 아이템 테이블 구성
+                table = Table(
+                    title="🎒 INVENTORY 🎒",
+                    border_style="bold green",
+                    title_style="bold green",
+                    expand=True,
+                )
+                table.add_column("선택", justify="center", width=4)
+                table.add_column("아이템 이름", justify="left")
+                table.add_column("수량", justify="center", width=6)
+                table.add_column("효과", justify="left")
+
+                if not slots:
+                    selected_item_idx = 0
+                    table.add_row("", "[grey37](아이템 없음)[/grey37]", "", "")
+                else:
+                    # 인덱스 바운드 방지
+                    selected_item_idx = max(0, min(len(slots) - 1, selected_item_idx))
+
+                    for idx, slot in enumerate(slots):
+                        item = slot.item
+                        is_selected = idx == selected_item_idx
+                        sel_indicator = "▶" if is_selected else " "
+
+                        # 효과 포맷팅
+                        eff_parts = []
+                        for stat, val in item.effect.items():
+                            if stat == "hp":
+                                eff_parts.append(f"HP +{val}")
+                            elif stat == "atk":
+                                eff_parts.append(f"ATK +{val}")
+                            elif stat == "defense":
+                                eff_parts.append(f"DEF +{val}")
+                        eff_str = ", ".join(eff_parts)
+
+                        row_style = "bold yellow" if is_selected else "white"
+                        table.add_row(
+                            sel_indicator, item.name, str(slot.count), eff_str, style=row_style
+                        )
+
+                # 3. 2분할 메인 그리드 레이아웃 생성
+                main_table = Table.grid(expand=True)
+                main_table.add_column(ratio=2)  # Left: Inventory
+                main_table.add_column(width=4)  # Spacing
+                main_table.add_column(ratio=1)  # Right: Player Status
+
+                left_grid = Table.grid(expand=True)
+                left_grid.add_column()
+                left_grid.add_row(tabs)
+                left_grid.add_row("")
+                left_grid.add_row(table)
+
+                right_panel = Panel(
+                    self._render_status(world.player),
+                    title="✨ Player Status ✨",
+                    border_style="bold cyan",
+                    expand=True,
+                )
+
+                main_table.add_row(left_grid, "", right_panel)
+
+                # 4. 최근 사용 및 행동 로그 패널 생성 (최근 3개 로그 출력)
+                logs_panel = Panel(
+                    self._render_logs(events.get_logs()[-3:]),
+                    title="📝 Activity Log 📝",
+                    border_style="grey37",
+                    expand=True,
+                )
+
+                # 전체 수직 레이아웃 구성
+                grid = Table.grid(expand=True)
+                grid.add_column(justify="center")
+                grid.add_row(main_table)
+                grid.add_row("")
+                grid.add_row(logs_panel)
+                grid.add_row("")
+
+                # 키 안내
+                hint = Text(
+                    "←/→ : 탭 이동  |  ↑/↓ : 아이템 선택  |  Enter : 사용  |  ESC/Q : 닫기",
+                    style="grey46",
+                    justify="center",
+                )
+                grid.add_row(hint)
+
+                # Live 업데이트를 통해 깜빡임 없이 안전하게 화면 렌더링
+                self.live.update(
+                    Panel(grid, border_style="bold green", padding=(1, 4)), refresh=True
+                )
+
+                # 키 입력 대기
+                cmd = self.get_input()
+                if cmd == "quit":
+                    return used_any_item
+                elif cmd == "left":
+                    cat_idx = (cat_idx - 1) % len(categories)
+                    selected_item_idx = 0
+                elif cmd == "right":
+                    cat_idx = (cat_idx + 1) % len(categories)
+                    selected_item_idx = 0
+                elif cmd == "up":
+                    if slots:
+                        selected_item_idx = (selected_item_idx - 1) % len(slots)
+                elif cmd == "down":
+                    if slots:
+                        selected_item_idx = (selected_item_idx + 1) % len(slots)
+                elif cmd == "select" and slots:
+                    # 아이템 즉시 실행 및 턴 소모
+                    item = slots[selected_item_idx].item
+                    action = UseItemAction(world.player, item)
+                    undo_system.execute(action)
+                    turn_manager.advance(world.player, action.cost)
+                    used_any_item = True
+        finally:
+            # 인벤토리 종료 시 화면을 기존 인게임 레이아웃으로 안전하게 롤백
+            self.live.update(self.layout, refresh=True)
 
     def show_leaderboard(self, leaderboard: Any) -> None:
         """리더보드 목록을 rich.table로 액자처럼 그려주고 아무 키나 입력하면 메뉴로 복귀."""

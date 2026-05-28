@@ -135,6 +135,16 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
                         events.log("미래를 다시 썼습니다.")
                         ui.render(world, messages=events.get_logs())
                     continue
+                elif cmd == "inventory":
+                    used_any = ui.show_inventory(world, undo_system, turn_manager)
+                    if used_any:
+                        from core.types import WaitAction
+
+                        action = WaitAction(player)
+                        action.cost = 0
+                    else:
+                        ui.render(world, messages=events.get_logs())
+                        continue
                 elif cmd == "pickup":
                     item = world.get_item_at(player.pos)
                     if item:
