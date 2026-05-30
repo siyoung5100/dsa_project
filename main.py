@@ -94,18 +94,21 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
         actor = turn_manager.next_actor()
         if actor is None or not player.alive:
             play_time = int(time.time() - start_time)
-            events.log(f"게임 오버! 최종 점수: {player.xp} (Q를 눌러 메인 메뉴로 복귀)")
+            events.log(f"게임 오버! 최종 점수: {player.xp}")
+
+            # 닉네임 입력받기
+            player_name = ui.prompt_name()
 
             # 리더보드 저장
             record = Record(
-                name="Player",
+                name=player_name,
                 score=player.xp,
                 play_time_sec=play_time,
                 undo_used=undo_system.used,
                 timestamp=datetime.now().isoformat(),
             )
             rank = leaderboard.add(record)
-            events.log(f"리더보드 등록 완료! 현재 순위: {rank + 1}등")
+            events.log(f"리더보드 등록 완료! 최종 순위: {rank}등 (Q를 눌러 메뉴로 복귀)")
 
             # 사망 후에도 화면은 볼 수 있게 루프 유지
             ui.render(world, messages=events.get_logs())
@@ -124,7 +127,31 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
                 cmd = ui.get_input()
 
                 if cmd == "quit":
-                    return
+                    # 수동 종료 의사 확인 및 이름 입력 유도
+                    if ui.prompt_confirm(
+                        "🚨 QUIT GAME 🚨",
+                        "정말로 게임을 종료하시겠습니까?\n현재까지의 기록이 리더보드에 등록됩니다.",
+                    ):
+                        play_time = int(time.time() - start_time)
+                        player_name = ui.prompt_name()
+
+                        # 리더보드 저장
+                        record = Record(
+                            name=player_name,
+                            score=player.xp,
+                            play_time_sec=play_time,
+                            undo_used=undo_system.used,
+                            timestamp=datetime.now().isoformat(),
+                        )
+                        rank = leaderboard.add(record)
+
+                        events.log(f"수동 종료 완료! 최종 순위: {rank}등")
+                        ui.render(world, messages=events.get_logs())
+                        time.sleep(1.5)
+                        return
+                    else:
+                        ui.render(world, messages=events.get_logs())
+                        continue
                 elif cmd == "undo":
                     if undo_system.undo():
                         events.log("시간을 되돌렸습니다.")
