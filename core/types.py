@@ -115,6 +115,7 @@ class Player(Entity):
 
     xp: int = 0
     level: int = 1
+    stage: int = 1
 
 
 @dataclass

@@ -156,6 +156,7 @@ class TerminalUI:
         hp_bar.append(f" {player.hp}/{player.max_hp}", style="white")
 
         table.add_row("HP", hp_bar)
+        table.add_row("Stage", f"{player.stage}F")
         table.add_row("Level", str(player.level))
         table.add_row("ATK", str(player.atk))
         table.add_row("DEF", str(player.defense))
