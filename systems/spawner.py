@@ -18,6 +18,7 @@ class Spawner:
 
     def spawn_monsters(self, world: World, count_per_room: int = 1) -> None:
         """각 방에 몬스터를 생성."""
+        stage = getattr(world.player, "stage", 1)
         for room in world.dungeon.rooms:
             for _ in range(count_per_room):
                 # 방 내부 무작위 좌표 선택
@@ -29,7 +30,7 @@ class Spawner:
                 if pos == world.player.pos or world.get_entity_at(pos):
                     continue
 
-                enemy = self._create_random_enemy(pos)
+                enemy = self._create_random_enemy(pos, stage)
                 world.entities.append(enemy)
 
     def spawn_items(self, world: World, count_per_room: int = 1) -> None:
@@ -47,14 +48,19 @@ class Spawner:
                 item = self._create_random_item()
                 world.add_item(pos, item)
 
-    def _create_random_enemy(self, pos: Coord) -> Enemy:
+    def _create_random_enemy(self, pos: Coord, stage: int = 1) -> Enemy:
         """무작위 적 생성."""
+        # kinds = [ (kind, base_hp, base_atk, defense, speed, base_xp) ]
         kinds = [
-            ("goblin", 20, 3, 1, 100),
-            ("orc", 40, 6, 2, 80),
-            ("slime", 10, 2, 0, 120),
+            ("goblin", 30, 5, 1, 100, 20),
+            ("orc", 55, 10, 3, 85, 45),
+            ("slime", 15, 3, 0, 120, 10),
         ]
-        kind, hp, atk, defense, speed = self.rng.choice(kinds)
+        kind, hp, atk, defense, speed, base_xp = self.rng.choice(kinds)
+
+        hp = int(hp * stage)
+        atk = int(atk * stage)
+        xp_reward = int(base_xp * stage)
 
         enemy = Enemy(
             id=self._entity_id_counter,
@@ -65,6 +71,7 @@ class Spawner:
             defense=defense,
             speed=speed,
             kind=kind,
+            xp_reward=xp_reward,
         )
         self._entity_id_counter += 1
         return enemy

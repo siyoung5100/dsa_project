@@ -156,6 +156,7 @@ class TerminalUI:
         hp_bar.append(f" {player.hp}/{player.max_hp}", style="white")
 
         table.add_row("HP", hp_bar)
+        table.add_row("Stage", f"{player.stage}F")
         table.add_row("Level", str(player.level))
         table.add_row("ATK", str(player.atk))
         table.add_row("DEF", str(player.defense))
@@ -445,107 +446,115 @@ class TerminalUI:
         name = ""
         max_len = 10
 
-        while True:
-            # 이름을 입력받는 미려한 패널 구성
-            grid = Table.grid(expand=True)
-            grid.add_column(justify="center")
-            grid.add_row("")
-            grid.add_row(
-                Text("🏆 LEADERBOARD REGISTRATION 🏆", style="bold yellow", justify="center")
-            )
-            grid.add_row("")
-            grid.add_row(
-                Text("새로운 기록 달성을 축하합니다!", style="bold green", justify="center")
-            )
-            grid.add_row(
-                Text(
-                    "리더보드에 등록할 이름을 입력해 주세요 (최대 10자):",
-                    style="white",
-                    justify="center",
+        try:
+            while True:
+                # 이름을 입력받는 미려한 패널 구성
+                grid = Table.grid(expand=True)
+                grid.add_column(justify="center")
+                grid.add_row("")
+                grid.add_row(
+                    Text("🏆 LEADERBOARD REGISTRATION 🏆", style="bold yellow", justify="center")
                 )
-            )
-            grid.add_row("")
-
-            # 입력 영역 비주얼 구성 (커서 효과 포함)
-            display_name = name
-            cursor = "█" if len(name) < max_len else ""
-            input_box = Text(justify="center")
-            input_box.append(" 👉  [ ", style="white")
-            input_box.append(display_name, style="bold cyan")
-            if cursor:
-                input_box.append(cursor, style="blink bold cyan")
-            # 패딩 공백 추가
-            padding_len = max_len - len(name)
-            input_box.append(" " * padding_len, style="white")
-            input_box.append(" ]  ", style="white")
-            grid.add_row(input_box)
-            grid.add_row("")
-            grid.add_row(
-                Text(
-                    "Enter : 등록 완료  |  Backspace : 한 글자 지우기",
-                    style="grey37",
-                    justify="center",
+                grid.add_row("")
+                grid.add_row(
+                    Text("새로운 기록 달성을 축하합니다!", style="bold green", justify="center")
                 )
-            )
-            grid.add_row("")
+                grid.add_row(
+                    Text(
+                        "리더보드에 등록할 이름을 입력해 주세요 (최대 10자):",
+                        style="white",
+                        justify="center",
+                    )
+                )
+                grid.add_row("")
 
-            # Live 렌더링을 활용해 버퍼 흔들림 없이 부드럽게 업데이트
-            self.live.update(Panel(grid, border_style="bold yellow", padding=(1, 4)), refresh=True)
+                # 입력 영역 비주얼 구성 (커서 효과 포함)
+                display_name = name
+                cursor = "█" if len(name) < max_len else ""
+                input_box = Text(justify="center")
+                input_box.append(" 👉  [ ", style="white")
+                input_box.append(display_name, style="bold cyan")
+                if cursor:
+                    input_box.append(cursor, style="blink bold cyan")
+                # 패딩 공백 추가
+                padding_len = max_len - len(name)
+                input_box.append(" " * padding_len, style="white")
+                input_box.append(" ]  ", style="white")
+                grid.add_row(input_box)
+                grid.add_row("")
+                grid.add_row(
+                    Text(
+                        "Enter : 등록 완료  |  Backspace : 한 글자 지우기",
+                        style="grey37",
+                        justify="center",
+                    )
+                )
+                grid.add_row("")
 
-            try:
-                k = readkey()
-            except (KeyboardInterrupt, SystemExit):
-                return "Player"
+                # Live 렌더링을 활용해 버퍼 흔들림 없이 부드럽게 업데이트
+                self.live.update(
+                    Panel(grid, border_style="bold yellow", padding=(1, 4)), refresh=True
+                )
 
-            if k in (key.ENTER, "\r", "\n"):
-                final_name = name.strip()
-                return final_name if final_name else "Player"
-            elif k in (key.BACKSPACE, "\x08", "\x7f"):
-                name = name[:-1]
-            elif len(k) == 1 and k.isprintable():
-                if len(name) < max_len:
-                    name += k
+                try:
+                    k = readkey()
+                except (KeyboardInterrupt, SystemExit):
+                    return "Player"
+
+                if k in (key.ENTER, "\r", "\n"):
+                    final_name = name.strip()
+                    return final_name if final_name else "Player"
+                elif k in (key.BACKSPACE, "\x08", "\x7f"):
+                    name = name[:-1]
+                elif len(k) == 1 and k.isprintable():
+                    if len(name) < max_len:
+                        name += k
+        finally:
+            self.live.update(self.layout, refresh=True)
 
     def prompt_confirm(self, title: str, message: str) -> bool:
         """대화형으로 YES / NO 선택을 입력받는 확인창."""
         selected_yes = True
 
-        while True:
-            grid = Table.grid(expand=True)
-            grid.add_column(justify="center")
-            grid.add_row("")
-            grid.add_row(Text(title, style="bold red", justify="center"))
-            grid.add_row("")
-            grid.add_row(Text(message, style="white", justify="center"))
-            grid.add_row("")
+        try:
+            while True:
+                grid = Table.grid(expand=True)
+                grid.add_column(justify="center")
+                grid.add_row("")
+                grid.add_row(Text(title, style="bold red", justify="center"))
+                grid.add_row("")
+                grid.add_row(Text(message, style="white", justify="center"))
+                grid.add_row("")
 
-            # YES/NO 텍스트 디자인 구성
-            yes_str = "▶  [ YES ]  " if selected_yes else "     YES    "
-            no_str = "     NO     " if selected_yes else "▶  [ NO ]   "
+                # YES/NO 텍스트 디자인 구성
+                yes_str = "▶  [ YES ]  " if selected_yes else "     YES    "
+                no_str = "     NO     " if selected_yes else "▶  [ NO ]   "
 
-            yes_style = "bold cyan" if selected_yes else "grey37"
-            no_style = "grey37" if selected_yes else "bold red"
+                yes_style = "bold cyan" if selected_yes else "grey37"
+                no_style = "grey37" if selected_yes else "bold red"
 
-            selection = Text(justify="center")
-            selection.append(yes_str, style=yes_style)
-            selection.append("        ")
-            selection.append(no_str, style=no_style)
-            grid.add_row(selection)
-            grid.add_row("")
-            grid.add_row(
-                Text("←/→ (A/D) : 선택 변경  |  Enter : 결정", style="grey37", justify="center")
-            )
-            grid.add_row("")
+                selection = Text(justify="center")
+                selection.append(yes_str, style=yes_style)
+                selection.append("        ")
+                selection.append(no_str, style=no_style)
+                grid.add_row(selection)
+                grid.add_row("")
+                grid.add_row(
+                    Text("←/→ (A/D) : 선택 변경  |  Enter : 결정", style="grey37", justify="center")
+                )
+                grid.add_row("")
 
-            self.live.update(Panel(grid, border_style="bold red", padding=(1, 4)), refresh=True)
+                self.live.update(Panel(grid, border_style="bold red", padding=(1, 4)), refresh=True)
 
-            cmd = self.get_input()
-            if cmd in ("left", "right"):
-                selected_yes = not selected_yes
-            elif cmd == "select":
-                return selected_yes
-            elif cmd == "quit":
-                return False
+                cmd = self.get_input()
+                if cmd in ("left", "right"):
+                    selected_yes = not selected_yes
+                elif cmd == "select":
+                    return selected_yes
+                elif cmd == "quit":
+                    return False
+        finally:
+            self.live.update(self.layout, refresh=True)
 
     def show_leaderboard(self, leaderboard: Any) -> None:
         """리더보드 목록을 rich.table로 액자처럼 그려주고 아무 키나 입력하면 메뉴로 복귀."""

@@ -77,6 +77,9 @@ def generate_dungeon(
     _connect(root, dungeon, rng)
 
     dungeon.rooms = rooms
+    if rooms:
+        last_room_center = rooms[-1].center
+        dungeon.set_tile(last_room_center, TileType.STAIRS)
     return dungeon
 
 

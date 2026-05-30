@@ -20,11 +20,24 @@ if TYPE_CHECKING:
 
 
 class UndoSystem:
-    def __init__(self, world: Any, limit: int = 30):
+    def __init__(self, world: Any = None, limit: int = 30):
         self.world = world
         self._history: deque[Action] = deque(maxlen=limit)
         self._redo: deque[Action] = deque(maxlen=limit)
         self.used: int = 0  # 누적 undo 사용 횟수 (리더보드 지표)
+
+    def clear(self) -> None:
+        """히스토리와 레두 스택을 완전히 비운다 (스테이지 전환 시 등)."""
+        self._history.clear()
+        self._redo.clear()
+
+    @property
+    def history(self) -> deque["Action"]:
+        return self._history
+
+    @property
+    def redo_stack(self) -> deque["Action"]:
+        return self._redo
 
     def execute(self, action: "Action") -> None:
         """행동을 실행하고 히스토리에 기록한다."""

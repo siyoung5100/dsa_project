@@ -11,6 +11,8 @@
   - remove(entity)   # lazy
 """
 
+from __future__ import annotations
+
 import heapq
 import itertools
 from typing import TYPE_CHECKING
@@ -27,11 +29,20 @@ class TurnManager:
         self._dead: set[int] = set()  # lazy 삭제를 위한 ID 집합
         self._now: int = 0  # 현재 "시간" 또는 "틱"
 
-    def schedule(self, entity: "Entity", at: int) -> None:
+    def clear(self) -> None:
+        """스케줄 힙과 lazy deletion 목록을 비운다. 현재 시간(_now)은 유지한다."""
+        self._heap.clear()
+        self._dead.clear()
+
+    @property
+    def heap(self) -> list[tuple[int, int, Entity]]:
+        return self._heap
+
+    def schedule(self, entity: Entity, at: int) -> None:
         """엔티티를 특정 시점에 행동하도록 예약한다."""
         heapq.heappush(self._heap, (at, next(self._counter), entity))
 
-    def next_actor(self) -> "Entity | None":
+    def next_actor(self) -> Entity | None:
         """다음 행동할 엔티티를 반환한다. 죽은 엔티티는 건너뛴다."""
         while self._heap:
             t, _, e = heapq.heappop(self._heap)
@@ -44,7 +55,7 @@ class TurnManager:
             return e
         return None
 
-    def advance(self, entity: "Entity", cost: int = 100) -> None:
+    def advance(self, entity: Entity, cost: int = 100) -> None:
         """행동 후 비용(cost)과 엔티티 속도(speed)를 계산하여 다음 턴을 예약한다."""
         # 계산식: 다음_시점 = 현재_시점 + (cost * 100 / speed)
         # speed가 높을수록 시점 증가폭이 작아져 더 자주 행동하게 됨.
@@ -52,6 +63,6 @@ class TurnManager:
         next_t = self._now + max(1, cost * 100 // max(1, entity.speed))
         self.schedule(entity, next_t)
 
-    def remove(self, entity: "Entity") -> None:
+    def remove(self, entity: Entity) -> None:
         """엔티티를 턴 스케줄에서 제거한다 (Lazy deletion)."""
         self._dead.add(entity.id)

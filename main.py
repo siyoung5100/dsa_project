@@ -16,7 +16,7 @@ from pathlib import Path
 
 from core.events import events
 from core.rng import RNG
-from core.types import AttackAction, Coord, MoveAction, PickupAction, Player, Record
+from core.types import AttackAction, Coord, MoveAction, PickupAction, Player, Record, TileType
 from core.world import World
 from map.bsp import generate_dungeon
 from map.fov import compute_fov
@@ -27,6 +27,12 @@ from systems.spawner import Spawner
 from systems.turn_manager import TurnManager
 from systems.undo import UndoSystem
 from ui.terminal import TerminalUI
+
+
+def calculate_score(player: Player, undo_used: int) -> int:
+    """리더보드 등록을 위한 가중치 기반 점수를 계산합니다. 점수는 0 미만으로 떨어지지 않습니다."""
+    raw_score = player.level * 1000 + player.xp + (player.stage - 1) * 1000 - undo_used * 100
+    return max(0, raw_score)
 
 
 def main() -> None:
@@ -94,7 +100,8 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
         actor = turn_manager.next_actor()
         if actor is None or not player.alive:
             play_time = int(time.time() - start_time)
-            events.log(f"게임 오버! 최종 점수: {player.xp}")
+            final_score = calculate_score(player, undo_system.used)
+            events.log(f"게임 오버! 최종 점수: {final_score}")
 
             # 닉네임 입력받기
             player_name = ui.prompt_name()
@@ -102,7 +109,7 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
             # 리더보드 저장
             record = Record(
                 name=player_name,
-                score=player.xp,
+                score=final_score,
                 play_time_sec=play_time,
                 undo_used=undo_system.used,
                 timestamp=datetime.now().isoformat(),
@@ -134,11 +141,12 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
                     ):
                         play_time = int(time.time() - start_time)
                         player_name = ui.prompt_name()
+                        final_score = calculate_score(player, undo_system.used)
 
                         # 리더보드 저장
                         record = Record(
                             name=player_name,
-                            score=player.xp,
+                            score=final_score,
                             play_time_sec=play_time,
                             undo_used=undo_system.used,
                             timestamp=datetime.now().isoformat(),
@@ -178,6 +186,44 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
                         action = PickupAction(player, player.pos, item)
                     else:
                         events.log("발밑에 아무것도 없습니다.")
+                        continue
+                elif cmd == "select":
+                    curr_tile = world.dungeon.tile_at(player.pos)
+                    if curr_tile and curr_tile.type == TileType.STAIRS:
+                        if ui.prompt_confirm(
+                            "🪜 NEXT FLOOR 🪜",
+                            f"정말로 {player.stage + 1}층으로 내려가시겠습니까?\n이전 층으로 되돌아갈 수 없습니다.",
+                        ):
+                            player.stage += 1
+                            undo_system.clear()
+
+                            new_seed = rng.randint(0, 999999)
+                            new_dungeon = generate_dungeon(width, height, seed=new_seed)
+                            world.dungeon = new_dungeon
+                            player.pos = new_dungeon.rooms[0].center
+
+                            world.entities.clear()
+                            world.items.clear()
+                            spawner.spawn_monsters(world, count_per_room=1)
+                            spawner.spawn_items(world, count_per_room=1)
+
+                            now_tick = turn_manager._now
+                            turn_manager.clear()
+                            turn_manager.schedule(player, now_tick)
+                            for entity in world.entities:
+                                turn_manager.schedule(entity, now_tick)
+
+                            events.log(f"{player.stage}층에 도달했습니다! 기운찬 바람이 붑니다.")
+
+                            from core.types import WaitAction
+
+                            action = WaitAction(player)
+                            action.cost = 0
+                        else:
+                            ui.render(world, messages=events.get_logs())
+                            continue
+                    else:
+                        events.log("여기는 계단이 아닙니다.")
                         continue
 
                 dx, dy = 0, 0
