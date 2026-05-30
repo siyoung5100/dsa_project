@@ -117,6 +117,35 @@ class Player(Entity):
     level: int = 1
     stage: int = 1
 
+    def gain_xp(self, amount: int) -> list[str]:
+        """경험치를 획득하고, 필요 시 레벨 업 처리를 수행하며 변경 로그를 반환."""
+        import math
+
+        self.xp += amount
+        logs = []
+        while True:
+            # 요구 경험치 공식: 100 * (1.5 ** (level - 1))
+            req = int(100 * (1.5 ** (self.level - 1)))
+            if self.xp >= req:
+                self.xp -= req
+
+                # 기존 체력 비율 저장 (현재 체력 / 최대 체력)
+                ratio = self.hp / self.max_hp if self.max_hp > 0 else 0
+
+                # 레벨업 및 스탯 상승
+                self.level += 1
+                self.atk += 2
+                self.defense += 1
+                self.max_hp += 10
+
+                # 체력 비율 유지 올림 계산
+                self.hp = math.ceil(self.max_hp * ratio)
+
+                logs.append(f"레벨 업! {self.level}레벨이 되었습니다! 스탯이 대폭 상승했습니다.")
+            else:
+                break
+        return logs
+
 
 @dataclass
 class Enemy(Entity):
@@ -127,6 +156,7 @@ class Enemy(Entity):
 
     kind: str = "goblin"
     path_cache: list[Coord] = field(default_factory=list)
+    xp_reward: int = 0
 
 
 # ==============================================================
@@ -221,8 +251,24 @@ class AttackAction(Action):
     attacker: Entity
     target: Entity
     _damage_dealt: int = 0  # do() 가 채워넣고 undo() 가 사용
+    _pre_hp: int = 0
+    _pre_xp: int = 0
+    _pre_level: int = 1
+    _pre_atk: int = 0
+    _pre_defense: int = 0
+    _pre_max_hp: int = 0
 
     def do(self, world: Any) -> None:
+        # 백업 (공격자가 플레이어인 경우 id가 0)
+        is_player_attacker = self.attacker.id == 0
+        if is_player_attacker:
+            self._pre_hp = self.attacker.hp
+            self._pre_xp = self.attacker.xp
+            self._pre_level = self.attacker.level
+            self._pre_atk = self.attacker.atk
+            self._pre_defense = self.attacker.defense
+            self._pre_max_hp = self.attacker.max_hp
+
         self._damage_dealt = self.target.take_damage(self.attacker.atk)
         from core.events import events
 
@@ -232,10 +278,29 @@ class AttackAction(Action):
             f"{self._damage_dealt}의 피해를 입혔습니다."
         )
 
+        # 몬스터 사망 시 처치 보상
+        if not self.target.alive:
+            xp_reward = getattr(self.target, "xp_reward", 0)
+            if xp_reward > 0:
+                events.log(f"{self.target.kind} 처치! {xp_reward} XP를 획득했습니다.")
+                if is_player_attacker:
+                    level_up_logs = self.attacker.gain_xp(xp_reward)
+                    for log in level_up_logs:
+                        events.log(log)
+
     def undo(self, world: Any) -> None:
         self.target.hp += self._damage_dealt
         if self.target.hp > 0:
             self.target.alive = True
+
+        # 플레이어 스냅샷 복구
+        if self.attacker.id == 0:
+            self.attacker.hp = self._pre_hp
+            self.attacker.xp = self._pre_xp
+            self.attacker.level = self._pre_level
+            self.attacker.atk = self._pre_atk
+            self.attacker.defense = self._pre_defense
+            self.attacker.max_hp = self._pre_max_hp
 
 
 @dataclass

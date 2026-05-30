@@ -29,6 +29,12 @@ from systems.undo import UndoSystem
 from ui.terminal import TerminalUI
 
 
+def calculate_score(player: Player, undo_used: int) -> int:
+    """리더보드 등록을 위한 가중치 기반 점수를 계산합니다. 점수는 0 미만으로 떨어지지 않습니다."""
+    raw_score = player.level * 1000 + player.xp + (player.stage - 1) * 1000 - undo_used * 100
+    return max(0, raw_score)
+
+
 def main() -> None:
     """게임 시작 진입점. 메인 메뉴 루프를 제어합니다."""
     leaderboard = Leaderboard(Path("leaderboard.json"))
@@ -94,7 +100,8 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
         actor = turn_manager.next_actor()
         if actor is None or not player.alive:
             play_time = int(time.time() - start_time)
-            events.log(f"게임 오버! 최종 점수: {player.xp}")
+            final_score = calculate_score(player, undo_system.used)
+            events.log(f"게임 오버! 최종 점수: {final_score}")
 
             # 닉네임 입력받기
             player_name = ui.prompt_name()
@@ -102,7 +109,7 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
             # 리더보드 저장
             record = Record(
                 name=player_name,
-                score=player.xp,
+                score=final_score,
                 play_time_sec=play_time,
                 undo_used=undo_system.used,
                 timestamp=datetime.now().isoformat(),
@@ -134,11 +141,12 @@ def run_game_loop(ui: TerminalUI, leaderboard: Leaderboard, seed: int) -> None:
                     ):
                         play_time = int(time.time() - start_time)
                         player_name = ui.prompt_name()
+                        final_score = calculate_score(player, undo_system.used)
 
                         # 리더보드 저장
                         record = Record(
                             name=player_name,
-                            score=player.xp,
+                            score=final_score,
                             play_time_sec=play_time,
                             undo_used=undo_system.used,
                             timestamp=datetime.now().isoformat(),
