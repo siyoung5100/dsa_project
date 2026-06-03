@@ -49,10 +49,8 @@ def main() -> None:
         elif choice == "leaderboard":
             ui.show_leaderboard(leaderboard)
         elif choice == "start":
-            # ==========================================
-            # [개발자 도구] 정식 릴리즈 시 아래 seed 입력을 제거하고 seed = None 등으로 설정하세요.
-            # ==========================================
-            seed = ui.prompt_seed(default_seed=42)
+            # 정식 릴리즈: 무작위 시드로 게임을 시작합니다.
+            seed = None
 
             # 실제 던전 플레이 시에만 Live 컨텍스트로 진입하여 3분할 맵 레이아웃을 가동합니다.
             with ui:
