@@ -117,3 +117,59 @@ def test_enemy_ai_perception():
 
     action = ai.decide(enemy, player.pos, world)
     assert action.dx == 0 and action.dy == 0
+
+
+def test_ai_cache_slicing_on_movement():
+    """플레이어 정지 상태(턴 소모 시)에서 몬스터가 전진할 때 캐시 슬라이싱 및 추적이 매끄러운지 검증."""
+    from core.types import Enemy, Player, Tile, TileType
+    from core.world import World
+    from map.bsp import Rect
+    from map.dungeon import Dungeon
+    from systems.ai import EnemyAI
+    from systems.inventory import Inventory
+
+    grid = [[Tile(TileType.FLOOR) for _ in range(10)] for _ in range(10)]
+    dungeon = Dungeon(width=10, height=10, grid=grid)
+    dungeon.rooms = [Rect(x=0, y=0, w=10, h=10)]
+
+    # 플레이어 (5,5)에 고정
+    player = Player(id=0, pos=Coord(5, 5), hp=100, max_hp=100, atk=10, defense=2, speed=100)
+    # 몬스터 (5,2)에서 출발 (거리 3)
+    enemy = Enemy(
+        id=1, pos=Coord(5, 2), hp=30, max_hp=30, atk=5, defense=1, speed=100, kind="goblin"
+    )
+
+    world = World(dungeon=dungeon, player=player, inventory=Inventory(), entities=[enemy])
+    ai = EnemyAI()
+
+    # 1. 첫 턴: A* 계산 실행 및 한 칸 전진 시도
+    action1 = ai.decide(enemy, player.pos, world)
+    assert action1.dx == 0
+    assert action1.dy == 1  # (5,2) -> (5,3) 이동 결정
+
+    # 몬스터 물리 이동 수행 (do)
+    action1.do(world)
+    assert enemy.pos == Coord(5, 3)
+    assert len(enemy.path_cache) > 0
+
+    # 2. 둘째 턴: 플레이어가 이동하지 않았더라도(대기 턴 소모 상태)
+    # 몬스터가 제자리걸음(0,0) 하지 않고 다음 타일 (5,4)로 정상 추적하는지 검증
+    action2 = ai.decide(enemy, player.pos, world)
+    assert action2.dx == 0
+    assert action2.dy == 1  # (5,3) -> (5,4) 이동 결정
+
+    action2.do(world)
+    assert enemy.pos == Coord(5, 4)
+
+
+def test_monster_speed_standardization():
+    """모든 종류의 몬스터 기본 속도가 100으로 통일되어 스폰되는지 검증."""
+    from core.rng import RNG
+    from systems.spawner import Spawner
+
+    rng = RNG(seed=42)
+    spawner = Spawner(rng)
+
+    for _ in range(100):
+        enemy = spawner._create_random_enemy(Coord(0, 0), stage=1)
+        assert enemy.speed == 100
