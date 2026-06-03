@@ -120,9 +120,17 @@ class EnemyAI:
             return AttackAction(enemy, world.player)  # world.player 가 있다고 가정
 
         # 경로 재계산 필요 여부 확인
-        # 캐시가 비었거나, 플레이어가 캐시의 목적지와 다르면 재계산
-        if not enemy.path_cache or enemy.path_cache[-1] != player_pos:
+        # 캐시가 비었거나, 몬스터 현재 위치가 캐시에 없거나, 플레이어 목적지가 캐시의 종점과 다르면 재계산
+        if (
+            not enemy.path_cache
+            or enemy.pos not in enemy.path_cache
+            or enemy.path_cache[-1] != player_pos
+        ):
             enemy.path_cache = a_star(enemy.pos, player_pos, passable=world.is_passable)
+        else:
+            # 캐시가 유효하면 이미 몬스터가 밟은 이전 칸은 슬라이싱하여 폐기
+            idx = enemy.path_cache.index(enemy.pos)
+            enemy.path_cache = enemy.path_cache[idx:]
 
         # 경로를 찾은 경우 이동
         if len(enemy.path_cache) > 1:

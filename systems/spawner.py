@@ -53,8 +53,8 @@ class Spawner:
         # kinds = [ (kind, base_hp, base_atk, defense, speed, base_xp) ]
         kinds = [
             ("goblin", 30, 5, 1, 100, 20),
-            ("orc", 55, 10, 3, 85, 45),
-            ("slime", 15, 3, 0, 120, 10),
+            ("orc", 55, 10, 3, 100, 45),
+            ("slime", 15, 3, 0, 100, 10),
         ]
         kind, hp, atk, defense, speed, base_xp = self.rng.choice(kinds)
 
