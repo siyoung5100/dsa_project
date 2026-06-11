@@ -32,7 +32,7 @@
 
 ```bash
 # 1) 저장소 클론
-git clone <REPO_URL>
+git clone https://github.com/siyoung5100/dsa_project
 cd dungeon_crawler
 
 # 2) 가상환경 생성 (권장)
